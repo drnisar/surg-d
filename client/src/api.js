@@ -1,9 +1,16 @@
 const TOKEN_KEY = 'surgd.token';
+const ADMIN_TOKEN_KEY = 'surgd.adminToken'; // kept while the admin is testing as another user
 
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
   set: (token) => localStorage.setItem(TOKEN_KEY, token),
-  clear: () => localStorage.removeItem(TOKEN_KEY),
+  clear: () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+  },
+  getAdmin: () => localStorage.getItem(ADMIN_TOKEN_KEY),
+  setAdmin: (token) => localStorage.setItem(ADMIN_TOKEN_KEY, token),
+  clearAdmin: () => localStorage.removeItem(ADMIN_TOKEN_KEY),
 };
 
 export class ApiError extends Error {

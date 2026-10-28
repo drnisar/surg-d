@@ -26,7 +26,31 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  // Admin testing aid: act as another user, keeping the admin token to switch back.
+  const impersonate = async (employeeId) => {
+    const { token, user } = await api('/auth/impersonate', { method: 'POST', body: { employeeId } });
+    if (!tokenStore.getAdmin()) tokenStore.setAdmin(tokenStore.get());
+    tokenStore.set(token);
+    setUser(user);
+  };
+
+  const stopImpersonating = async () => {
+    const adminToken = tokenStore.getAdmin();
+    if (!adminToken) return logout();
+    tokenStore.set(adminToken);
+    tokenStore.clearAdmin();
+    try {
+      setUser(await api('/auth/me'));
+    } catch {
+      logout();
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout, impersonate, stopImpersonating }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);

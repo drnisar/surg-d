@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ROSTER_EDITOR_ROLES, ROSTER_ELIGIBLE_ROLES, daysInMonth, locationLabel } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
+import DesignationLegend from '../components/DesignationLegend.jsx';
 import RosterPicker from '../components/RosterPicker.jsx';
+import RosterPrint from '../components/RosterPrint.jsx';
 import RosterTable from '../components/RosterTable.jsx';
 import { shiftMonth, toMonth } from '../dates.js';
 
@@ -83,37 +85,45 @@ export default function RosterPage() {
 
   return (
     <>
-      <div className="toolbar">
-        <h2>Duty roster</h2>
-        <span className="spacer" />
-        <div className="month-picker">
-          <button className="btn ghost" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month">
-            ‹
+      <div className="screen-only">
+        <div className="toolbar">
+          <h2>Duty roster</h2>
+          <span className="spacer" />
+          <div className="month-picker">
+            <button className="btn ghost" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month">
+              ‹
+            </button>
+            <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
+            <button className="btn ghost" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Next month">
+              ›
+            </button>
+            <button className="btn ghost" onClick={() => setMonth(toMonth(new Date()))}>
+              This month
+            </button>
+          </div>
+          <button className="btn ghost" onClick={() => window.print()}>
+            Print
           </button>
-          <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
-          <button className="btn ghost" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Next month">
-            ›
-          </button>
-          <button className="btn ghost" onClick={() => setMonth(toMonth(new Date()))}>
-            This month
-          </button>
+          {canEdit && (
+            <button className={`btn ${editMode ? 'primary' : 'ghost'}`} onClick={() => setEditMode(!editMode)}>
+              {editMode ? 'Done' : 'Edit'}
+            </button>
+          )}
         </div>
-        {canEdit && (
-          <button className={`btn ${editMode ? 'primary' : 'ghost'}`} onClick={() => setEditMode(!editMode)}>
-            {editMode ? 'Done' : 'Edit'}
-          </button>
+
+        {editMode && (
+          <p className="muted hint">
+            Click a place of duty to set who is there, or click a date to place doctors for both shifts. Each person can be
+            in only one place per shift.
+          </p>
         )}
+        {error && <p className="error">{error}</p>}
+
+        <DesignationLegend roles={ROSTER_ELIGIBLE_ROLES} />
+        <RosterTable days={days} slot={slot} canEdit={editMode} onEdit={setEditing} />
       </div>
 
-      {editMode && (
-        <p className="muted hint">
-          Click a place of duty to set who is there, or click a date to place doctors for both shifts. Each person can be
-          in only one place per shift.
-        </p>
-      )}
-      {error && <p className="error">{error}</p>}
-
-      <RosterTable days={days} slot={slot} canEdit={editMode} onEdit={setEditing} />
+      <RosterPrint month={month} days={days} slot={slot} />
 
       {editing && (
         <RosterPicker

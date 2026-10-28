@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildMrNumber, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation } from '@surg-d/shared';
-import { validateEmployee } from '../src/employees.js';
+import { addableDesignations, buildMrNumber, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
+import { validateEmployee, validatePasswordChange } from '../src/employees.js';
 
 test('builds MR number from employee code', () => {
   assert.equal(buildMrNumber('1100'), 'K0360000001100');
@@ -66,4 +66,27 @@ test('validateEmployee reports missing fields', () => {
   const { errors } = validateEmployee({});
   assert.deepEqual(Object.keys(errors).sort(), ['designation', 'email', 'employeeCode', 'fullName', 'officialEmail', 'phoneNumber']);
   assert.equal(validateEmployee({ fullName: 'X' }, { partial: true }).errors, null);
+});
+
+test('whatsappUrl keeps only the digits of a full number', () => {
+  assert.equal(whatsappUrl('+923001234567'), 'https://wa.me/923001234567');
+  assert.equal(whatsappUrl(''), null);
+  assert.equal(whatsappUrl(undefined), null);
+});
+
+test('validatePasswordChange checks both fields', () => {
+  assert.equal(validatePasswordChange({ currentPassword: 'old-pass-1', newPassword: 'new-pass-1' }).errors, null);
+  assert.ok(validatePasswordChange({ newPassword: 'new-pass-1' }).errors.currentPassword);
+  assert.ok(validatePasswordChange({ currentPassword: 'old-pass-1', newPassword: 'short' }).errors.newPassword);
+  assert.ok(validatePasswordChange({ currentPassword: 'same-pass-1', newPassword: 'same-pass-1' }).errors.newPassword);
+});
+
+test('addableDesignations: admin adds anyone, an ER adds TMOs and HOs, others nobody', () => {
+  assert.ok(addableDesignations({ role: 'admin', designation: null }).includes('professor'));
+  assert.deepEqual(addableDesignations({ role: 'manager', designation: 'experiential_registrar' }), [
+    'trainee_medical_officer',
+    'house_officer',
+  ]);
+  assert.deepEqual(addableDesignations({ role: 'manager', designation: 'trainee_registrar' }), []);
+  assert.deepEqual(addableDesignations({ role: 'consultant', designation: 'professor' }), []);
 });

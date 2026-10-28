@@ -1,5 +1,6 @@
 import {
   DESIGNATION_KEYS,
+  PASSWORD_MIN_LENGTH,
   ROLES,
   buildMrNumber,
   isValidEmployeeMr,
@@ -72,7 +73,9 @@ export function validateEmployee(input, { partial = false } = {}) {
   }
 
   if (has('password')) {
-    if (String(input.password).length < 8) errors.password = 'Password must be at least 8 characters';
+    if (String(input.password).length < PASSWORD_MIN_LENGTH) {
+      errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
+    }
     else out.password = String(input.password);
   }
 
@@ -97,4 +100,20 @@ export function toEmployeeDto(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+// A user changing their own password. Whether `currentPassword` is right is checked against the stored hash.
+export function validatePasswordChange(input) {
+  const errors = {};
+  const currentPassword = String(input.currentPassword ?? '');
+  const newPassword = String(input.newPassword ?? '');
+
+  if (!currentPassword) errors.currentPassword = 'Enter your current password';
+  if (newPassword.length < PASSWORD_MIN_LENGTH) {
+    errors.newPassword = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
+  } else if (newPassword === currentPassword) {
+    errors.newPassword = 'Choose a password different from the current one';
+  }
+
+  return { data: { currentPassword, newPassword }, errors: Object.keys(errors).length ? errors : null };
 }

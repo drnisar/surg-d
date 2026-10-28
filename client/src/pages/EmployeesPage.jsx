@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DESIGNATIONS, ROLE_LABELS, designationLabel } from '@surg-d/shared';
+import { DESIGNATIONS, ROLE_LABELS, addableDesignations, designationLabel, whatsappUrl } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import EmployeeForm from '../components/EmployeeForm.jsx';
@@ -7,6 +7,7 @@ import EmployeeForm from '../components/EmployeeForm.jsx';
 export default function EmployeesPage() {
   const { user } = useAuth();
   const isAdmin = user.role === 'admin';
+  const canAdd = addableDesignations(user);
   const [employees, setEmployees] = useState([]);
   const [filters, setFilters] = useState({ q: '', designation: '' });
   const [editing, setEditing] = useState(null); // null = closed, {} = new, employee = edit
@@ -54,7 +55,7 @@ export default function EmployeesPage() {
             </option>
           ))}
         </select>
-        {isAdmin && (
+        {canAdd.length > 0 && (
           <button className="btn primary" onClick={() => setEditing({})}>
             Add employee
           </button>
@@ -88,7 +89,15 @@ export default function EmployeesPage() {
                 </td>
                 <td>{e.email}</td>
                 <td>{e.officialEmail}</td>
-                <td className="mono">{e.phone}</td>
+                <td className="mono">
+                  {whatsappUrl(e.phone) ? (
+                    <a href={whatsappUrl(e.phone)} target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
+                      {e.phone}
+                    </a>
+                  ) : (
+                    e.phone
+                  )}
+                </td>
                 {isAdmin && (
                   <td className="actions">
                     <button className="btn ghost" onClick={() => setEditing(e)}>
@@ -117,6 +126,7 @@ export default function EmployeesPage() {
       {editing && (
         <EmployeeForm
           employee={editing.id ? editing : null}
+          designations={editing.id ? undefined : canAdd}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);

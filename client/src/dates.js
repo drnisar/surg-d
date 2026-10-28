@@ -29,3 +29,20 @@ export function formatDay(date) {
     isWeekend: local.getDay() === 0,
   };
 }
+
+// Local midnight to the next local midnight, in epoch ms, for the API's created-at range filters.
+export function dayRange(date = today()) {
+  return { from: parse(date).getTime(), to: parse(shiftDate(date, 1)).getTime() };
+}
+
+// Query string for tasks created on `date` (default today), e.g. 'from=…&to=…'.
+export const dayQuery = (date) => new URLSearchParams(dayRange(date)).toString();
+
+// ISO timestamp -> local 'YYYY-MM-DD'
+export const dateOf = (iso) => toDate(new Date(iso));
+
+// ISO timestamp -> '23 Oct, 10:15'
+export function formatDateTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}

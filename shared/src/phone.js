@@ -13,3 +13,9 @@ export function normalizePhone(countryCode, phoneNumber) {
 
   return { countryCode: `+${cc}`, phoneNumber: number, full: `+${cc}${number}` };
 }
+
+// WhatsApp click-to-chat link for a stored full number ('+923001234567' -> 'https://wa.me/923001234567').
+export function whatsappUrl(phone) {
+  const digits = String(phone ?? '').replace(/\D/g, '');
+  return digits ? `https://wa.me/${digits}` : null;
+}

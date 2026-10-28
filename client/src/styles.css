@@ -60,6 +60,16 @@ th { background: var(--bg); font-weight: 600; }
 .role-manager { background: #fff1d6; color: #7a4b00; }
 .role-doctor { background: #dcf5e8; color: #0b6e4f; }
 .role-nurse { background: #f1e3ff; color: #5b2a86; }
+/* Roster names by designation: blues for consultants, warm tones for registrars, greens for TMO/HO. */
+.desig-professor { background: #d3ddff; color: #1a2f80; }
+.desig-associate_professor { background: #dbeafe; color: #1e4fa0; }
+.desig-assistant_professor { background: #d7f0fa; color: #0b5f7a; }
+.desig-experiential_registrar { background: #ffe0c7; color: #8a3b00; }
+.desig-trainee_registrar { background: #fff1bf; color: #6b5200; }
+.desig-trainee_medical_officer { background: #d4f2e1; color: #0b6e4f; }
+.desig-house_officer { background: #eaf4d2; color: #4a6b10; }
+.desig-nurse { background: #f1e3ff; color: #5b2a86; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: -0.25rem 0 0.75rem; }
 
 .modal-backdrop {
   position: fixed; inset: 0; background: rgb(0 0 0 / 0.35);
@@ -155,3 +165,156 @@ label.unavailable { color: var(--muted); }
   .shift-cards { grid-template-columns: 1fr; }
 }
 .duty-place .dot { background: currentColor; }
+
+/* Notification badge */
+.with-badge { position: relative; display: inline-flex; align-items: center; gap: 0.35rem; }
+.notify-badge {
+  min-width: 1.15rem; height: 1.15rem; padding: 0 0.3rem; border-radius: 999px;
+  background: var(--danger); color: #fff; font-size: 0.7rem; font-weight: 700; line-height: 1.15rem; text-align: center;
+}
+.profile { color: var(--muted); text-decoration: none; padding: 0.35rem 0.5rem; border-radius: 6px; }
+.profile:hover, .profile.active { background: var(--bg); }
+
+/* Ward */
+.beds td { vertical-align: top; white-space: normal; }
+.beds td.mono { white-space: nowrap; width: 6rem; }
+.beds .bed-tasks { width: 55%; }
+.chip.mine { background: #eef8f3; color: var(--primary); }
+.chip .muted { font-size: 0.75rem; }
+.responsible { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin-top: 0.3rem; }
+.responsible .chip { font-size: 0.75rem; padding: 0.05rem 0.45rem; }
+.beds .tick { width: 2rem; }
+.beds tr.ticked td { background: #eef8f3; }
+.allocation-bar {
+  position: sticky; bottom: 0.5rem; margin-top: 1rem; padding: 0.75rem 1rem;
+  display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+.allocation-doctors { display: flex; flex-direction: column; gap: 0.35rem; max-height: 9rem; overflow-y: auto; }
+.allocation-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.allocation-group > .muted { min-width: 4.5rem; }
+.allocation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+
+/* Tasks */
+.task-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.task {
+  display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border); border-radius: 6px;
+}
+.task.new { border-color: var(--danger); background: #fff6f5; }
+.task.completed .task-desc { text-decoration: line-through; color: var(--muted); }
+.task-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+.task-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.bed-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; font-weight: 700;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0 0.3rem;
+}
+.new-tag { background: var(--danger); color: #fff; font-size: 0.65rem; font-weight: 700; border-radius: 4px; padding: 0.05rem 0.3rem; }
+.done { color: var(--primary); }
+.task-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
+.task-columns h3, .completed-section h3 { margin: 0 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+.count { font-size: 0.75rem; background: var(--bg); border-radius: 999px; padding: 0.1rem 0.5rem; color: var(--muted); }
+.completed-section { margin-top: 1rem; }
+
+.task-dialog { max-width: 640px; max-height: calc(100vh - 2rem); overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+.task-dialog h3 { margin: 0.5rem 0 0; font-size: 1rem; }
+.dialog-head h2 { margin: 0; }
+.dialog-head p { margin: 0.2rem 0 0; }
+.task-form { display: flex; flex-direction: column; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+.template-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.chip-btn {
+  font: inherit; font-size: 0.78rem; padding: 0.2rem 0.55rem; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
+}
+.chip-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+@media (max-width: 400px) {
+  .task-columns { grid-template-columns: 1fr; }
+}
+.task-input { display: flex; gap: 0.5rem; }
+.task-input input { flex: 1; }
+.chip-btn.selected { background: var(--primary); border-color: var(--primary); color: var(--primary-text); }
+.pending-tasks { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; }
+.pending-tasks li span { margin-right: 0.4rem; }
+.pending-tasks .remove {
+  font: inherit; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 0.3rem; border-radius: 4px;
+}
+.pending-tasks .remove:hover { color: var(--danger); background: var(--bg); }
+
+/* Admin testing as another user */
+.impersonation-banner {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem 1rem;
+  padding: 0.5rem 1rem; background: #fff1d6; color: #7a4b00; border-bottom: 1px solid #f0d49a; font-size: 0.9rem;
+}
+.impersonation-banner .btn { background: #7a4b00; color: #fff; padding: 0.3rem 0.8rem; }
+
+/* Profile */
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; align-items: start; }
+.profile-grid h3 { margin: 0 0 0.75rem; }
+.details { margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.details div { display: grid; grid-template-columns: 8rem 1fr; gap: 0.5rem; }
+.details dt { color: var(--muted); font-size: 0.875rem; }
+.details dd { margin: 0; overflow-wrap: anywhere; }
+.password-form { max-width: 420px; display: flex; flex-direction: column; gap: 0.75rem; }
+.password-form h2, .password-form p { margin: 0; }
+.password-card { display: flex; flex-direction: column; gap: 0.6rem; }
+.password-card p { margin: 0; }
+.switch-user { display: flex; flex-direction: column; gap: 0.75rem; }
+.switch-user p { margin: 0; }
+.switch-user select { flex: 1; }
+
+@media (max-width: 400px) {
+  .profile-grid { grid-template-columns: 1fr; }
+  .details div { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* Archive */
+.archive-notice {
+  margin: 0 0 1rem; padding: 0.55rem 0.85rem; border-radius: 8px; font-size: 0.9rem;
+  background: #fff1d6; border: 1px solid #f0d49a; color: #7a4b00;
+}
+.archive-notice a { color: inherit; font-weight: 600; }
+.task-dialog .archive-notice { margin: 0; }
+.archive-status button { padding: 0.4rem 0.9rem; }
+.archive-days { display: flex; flex-direction: column; gap: 1rem; }
+.archive-days h3 { margin: 0 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; }
+
+/* Printing (roster) — RosterPrint is hidden on screen and replaces the page on paper */
+.print-only { display: none; }
+
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+
+  .topbar, .impersonation-banner, .screen-only, .modal-backdrop { display: none !important; }
+  .print-only { display: block; }
+  :root, body { background: #fff; color: #000; }
+  .container { max-width: none; padding: 0; }
+
+  .roster-print { font-size: 8pt; color: #000; }
+  .print-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3mm; }
+  .print-head h1 { margin: 1mm 0 0; font-size: 14pt; }
+  .print-stamp { font-size: 7pt; }
+
+  .roster-print table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .roster-print th, .roster-print td {
+    border: 1px solid #000; padding: 1mm 1.2mm; vertical-align: top; text-align: left;
+    white-space: normal; word-break: break-word; background: none;
+  }
+  .roster-print thead th { text-align: center; font-weight: 700; }
+  .roster-print thead { display: table-header-group; }
+  .roster-print .print-shift { text-transform: uppercase; letter-spacing: 0.05em; }
+  .roster-print .print-date-col { width: 14mm; }
+  .roster-print tbody th { font-weight: 700; white-space: nowrap; }
+  .roster-print tbody th span { font-weight: 400; }
+  .roster-print .shift-start { border-left-width: 2px; }
+  .roster-print tr { break-inside: avoid; }
+  .roster-print .print-sunday th, .roster-print .print-sunday td {
+    background: #e6e6e6; print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .print-desig { font-size: 7pt; }
+
+  .print-foot { margin-top: 3mm; break-inside: avoid; }
+  .print-foot p { margin: 0 0 6mm; font-size: 7pt; }
+  .print-signatures { display: flex; justify-content: space-between; gap: 10mm; }
+}
+.beds-source { margin: -0.5rem 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+.small-btn { padding: 0.2rem 0.6rem; font-size: 0.8rem; }

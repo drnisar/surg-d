@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   DEFAULT_COUNTRY_CODE,
   DESIGNATIONS,
+  DESIGNATION_KEYS,
   ROLE_LABELS,
   buildMrNumber,
   parseMrNumber,
@@ -17,7 +18,8 @@ function previewMr(code) {
   }
 }
 
-export default function EmployeeForm({ employee, onClose, onSaved }) {
+// `designations` limits the designation choices, e.g. to the juniors a registrar may add.
+export default function EmployeeForm({ employee, designations = DESIGNATION_KEYS, onClose, onSaved }) {
   const isEdit = Boolean(employee);
   const [form, setForm] = useState({
     employeeCode: employee ? parseMrNumber(employee.mrNumber)?.employeeCode ?? '' : '',
@@ -87,7 +89,7 @@ export default function EmployeeForm({ employee, onClose, onSaved }) {
             'Designation',
             <select value={form.designation} onChange={set('designation')} required={!isAdminAccount}>
               <option value="">{isAdminAccount ? 'None (admin)' : 'Select…'}</option>
-              {DESIGNATIONS.map((d) => (
+              {DESIGNATIONS.filter((d) => designations.includes(d.key)).map((d) => (
                 <option key={d.key} value={d.key}>
                   {d.label}
                 </option>

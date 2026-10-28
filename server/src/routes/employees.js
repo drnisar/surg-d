@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { DESIGNATION_KEYS, ROLES } from '@surg-d/shared';
+import { DESIGNATION_KEYS, ROLES, addableDesignations, designationLabel } from '@surg-d/shared';
 import { pool } from '../db.js';
 import { asyncHandler, HttpError } from '../errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -52,12 +52,23 @@ async function toColumns(data) {
   return columns;
 }
 
+// The admin adds anyone; some designations may add juniors (see addableDesignations).
 employeesRouter.post(
   '/',
-  requireRole(ROLES.ADMIN),
   asyncHandler(async (req, res) => {
-    const { data, errors } = validateEmployee(req.body ?? {});
+    const [me] = await pool.query('SELECT role, designation FROM employees WHERE id = ? AND is_active = 1', [req.user.id]);
+    const allowed = me[0] ? addableDesignations(me[0]) : [];
+    if (!allowed.length) throw new HttpError(403, 'Insufficient permissions');
+
+    // Only the admin may create admin accounts, so `role` is ignored for everyone else.
+    const isAdmin = me[0].role === ROLES.ADMIN;
+    const { data, errors } = validateEmployee(isAdmin ? req.body ?? {} : { ...req.body, role: undefined });
     if (errors) throw new HttpError(422, 'Validation failed', errors);
+    if (!isAdmin && !allowed.includes(data.designation)) {
+      throw new HttpError(422, 'Validation failed', {
+        designation: `You can add only ${allowed.map(designationLabel).join(' or ')}`,
+      });
+    }
 
     const columns = await toColumns(data);
     const [result] = await pool.query('INSERT INTO employees SET ?', [columns]);

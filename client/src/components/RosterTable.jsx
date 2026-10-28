@@ -60,7 +60,7 @@ export default function RosterTable({ days, slot, canEdit = false, onEdit }) {
                               </span>
                               <span className="chips">
                                 {slot(date, s.key, loc.key).map((p) => (
-                                  <span key={p.id} className={`chip role-${p.role}`} title={designationLabel(p.designation)}>
+                                  <span key={p.id} className={`chip desig-${p.designation}`} title={designationLabel(p.designation)}>
                                     {p.fullName}
                                   </span>
                                 ))}
