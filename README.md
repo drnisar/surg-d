@@ -9,7 +9,7 @@ Single repo (npm workspaces) containing:
 | `server/` | Express REST API backed by MySQL (`mysql2`)                       |
 | `shared/` | Domain rules used by both: designations → roles, MR number, phone |
 
-Requirements live in [`surg-d.md`](./surg-d.md).
+Requirements live in [`surg-d.md`](./surg-d.md). Deployment (Vercel + TiDB Cloud): [`DEPLOY.md`](./DEPLOY.md).
 
 ## Getting started
 

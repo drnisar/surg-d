@@ -22,5 +22,7 @@ export const config = {
     user: process.env.DB_USER ?? 'surgd',
     password: process.env.DB_PASSWORD ?? 'surgd',
     database: process.env.DB_NAME ?? 'surg_d',
+    // Cloud MySQL (e.g. TiDB Cloud) requires TLS; the local server doesn't.
+    ssl: process.env.DB_SSL === 'true' ? { minVersion: 'TLSv1.2', rejectUnauthorized: true } : undefined,
   },
 };

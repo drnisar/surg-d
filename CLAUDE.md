@@ -17,6 +17,7 @@ npm test             # server + shared unit tests (node:test)
 npm run build        # client production build (the only build step)
 npm run db:migrate   # apply new files in server/db/migrations
 npm run db:seed      # create the initial admin (employee code 1, password from server/.env)
+npm run db:migrate:prod / db:seed:prod   # same, against the cloud DB in server/.env.production
 
 # Single test file / tests matching a name — run from server/
 # (a pattern passed through `npm test --` is ignored)
@@ -43,6 +44,7 @@ npm workspaces monorepo: `client/` (React 18, Vite 6, React Router 6), `server/`
   - On the client, `AuthProvider` (`auth.jsx`) holds the user.
   - `TaskBadgeProvider` (`taskBadge.jsx`) polls the unseen-task count. It is keyed by `user.id` in `App.jsx`, so switching user remounts every page.
 - **Client structure:** `pages/` own data loading and state; `components/` are presentational and take props and callbacks. Dates are handled as local `YYYY-MM-DD` / `YYYY-MM` strings (`client/src/dates.js`), and the server returns `DATE` columns via `DATE_FORMAT`, so nothing shifts across timezones.
+- **Deployment (see `DEPLOY.md`):** Vercel serves `client/dist` and runs the Express app as one function via `api/index.js`. `vercel.json` rewrites `/api/*` to it and everything else to `index.html`, and pins the function to `sin1`. The database is TiDB Cloud (MySQL-compatible, needs `DB_SSL=true`). `server/src/index.js` is only the local long-running entry, so don't put start-up work there that production needs. The bed list is also kept in `beds_cache`, so serverless cold starts don't wait on the hospital API.
 - **Database:** `server/scripts/migrate.js` creates the database if it's missing, then applies `server/db/migrations/NNN_*.sql` in order. Each applied file is recorded in `schema_migrations`. Add the next numbered file for any schema change; never edit an applied one. Employees are soft-deleted (`is_active = 0`).
 
 ## Domain rules
