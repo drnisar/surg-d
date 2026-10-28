@@ -26,3 +26,6 @@ export function createApp() {
   app.use(errorHandler);
   return app;
 }
+
+// Vercel's Express preset serves this module's default export; locally src/index.js starts its own app.
+export default createApp();

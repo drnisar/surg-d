@@ -1,12 +1,21 @@
 # Deploying to Vercel + TiDB Cloud
 
-The web app and the API run on **Vercel**. The API is the same Express app, served as one function through `api/index.js`. The database is **TiDB Cloud**, which speaks MySQL, so the code and migrations are unchanged. Both live in Singapore, the closest region to Peshawar and to the hospital bed feed.
+The app runs as two Vercel projects, both deploying the `main` branch of `drnisar/surg-d`:
+
+| Project | Root Directory | Preset | URL |
+|---|---|---|---|
+| **server** | `server` | Express | https://server-five-lac-66.vercel.app |
+| **client** | `client` | Vite | https://client-three-kohl-90.vercel.app |
+
+- **server** runs the Express API from the default export of `server/src/app.js`. `server/vercel.json` runs it in Singapore (`sin1`), close to the database and the hospital feed.
+- **client** serves the built web app. `client/vercel.json` forwards every `/api/...` request to the server and sends every other path to `index.html`. The browser only ever talks to the client's address, so no CORS setup is needed. If the server's URL changes, update it in `client/vercel.json`.
+- The database is **TiDB Cloud**. It speaks MySQL, so the code and migrations are the same as locally.
 
 > **Before going live:** get sign-off for keeping patient data on these services. The database holds patient MR numbers and task notes. It also holds the last bed list from the hospital feed (patient names, MR numbers, consultants) in `beds_cache`.
 
 ## 1. Check the hospital bed feed is reachable from outside
 
-Vercel calls `BEDS_API_URL` (`http://182.188.28.220:8034/...`) from Singapore. If the hospital firewall only lets in local addresses, the Ward page will show "Could not load beds". Ask hospital IT whether that address accepts connections from the internet, or from Vercel's Singapore region. Everything else in the app works without it.
+The server calls `BEDS_API_URL` (`http://182.188.28.220:8034/...`) from Singapore. If the hospital firewall only lets in local addresses, the Ward page will show "Could not load beds". Ask hospital IT. Everything else in the app works without it.
 
 ## 2. Create the database (TiDB Cloud)
 
@@ -39,33 +48,32 @@ Vercel calls `BEDS_API_URL` (`http://182.188.28.220:8034/...`) from Singapore. I
    npm run db:seed:prod
    ```
 
-## 3. Create the Vercel project
+## 3. Environment variables on the **server** project
 
-1. Commit and push the code to GitHub (`drnisar/surg-d`).
-2. On vercel.com: **Add New → Project**, then import the repository.
-   - Leave **Root Directory** as the repository root.
-   - The build settings come from `vercel.json`: it runs `npm run build`, serves `client/dist`, and sends `/api/*` to the function in Singapore.
-3. Under **Settings → Environment Variables**, add these for Production:
+In Vercel, open **server → Settings → Environment Variables** and add these for Production. The client project needs none.
 
-   | Name | Value |
-   |---|---|
-   | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | same as `.env.production` |
-   | `DB_SSL` | `true` |
-   | `JWT_SECRET` | a long random string, e.g. the output of `openssl rand -base64 48` |
-   | `JWT_EXPIRES_IN` | `12h` |
-   | `ALLOW_IMPERSONATION` | `false` (turns off Switch user) |
-   | `BEDS_API_URL` | the hospital feed URL from `server/.env` |
-   | `BEDS_CACHE_SECONDS` | `300` |
-   | `BEDS_EXCLUDE` | `ORHB-1` |
+| Name | Value |
+|---|---|
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | same as `.env.production` |
+| `DB_SSL` | `true` |
+| `JWT_SECRET` | a long random string, e.g. the output of `openssl rand -base64 48` |
+| `JWT_EXPIRES_IN` | `12h` |
+| `ALLOW_IMPERSONATION` | `false` (turns off Switch user) |
+| `BEDS_API_URL` | the hospital feed URL from `server/.env` |
+| `BEDS_CACHE_SECONDS` | `300` |
+| `BEDS_EXCLUDE` | `ORHB-1` |
 
-4. Deploy, then check:
-   - `https://<your-app>.vercel.app/api/health` returns `{"ok":true}`.
-   - You can log in with the admin MR number `K0360000000001` and `ADMIN_PASSWORD`.
-   - The Ward page lists beds. If it doesn't, see step 1.
+Environment variables only take effect on the next deployment, so redeploy the server after changing them.
+
+## 4. Check
+
+- `https://server-five-lac-66.vercel.app/api/health` returns `{"ok":true}`.
+- `https://client-three-kohl-90.vercel.app/api/health` returns the same, which shows the client forwards requests to the server.
+- On the client, you can log in with the admin MR number `K0360000000001` and `ADMIN_PASSWORD`, and the Ward page lists beds. If beds don't load, see step 1.
 
 ## Later changes
 
-- **Code:** pushing to `main` redeploys automatically.
+- **Code:** pushing to `main` redeploys both projects.
 - **Database changes:** a new file in `server/db/migrations/` must also be applied to the cloud database. Run `npm run db:migrate:prod` before or right after the deploy that needs it.
 
 ## Good to know
