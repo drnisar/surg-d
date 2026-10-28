@@ -28,7 +28,7 @@ async function findTask(id) {
   return rows[0] ? toTaskDto(rows[0]) : null;
 }
 
-// ?scope=mine|ward (default ward) &status=open|completed (default open) &bed=K031539 &patient=<MR number>
+// ?scope=mine|ward (default ward) &status=open|completed (default open) &bed=SUR-D-04(M) &patient=<MR number>
 // &from=&to= (epoch ms, created_at range; the client uses it for "today" and for the archive)
 // Completed tasks come newest first and are capped; open tasks come oldest first.
 tasksRouter.get(

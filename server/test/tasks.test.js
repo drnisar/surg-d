@@ -41,6 +41,22 @@ test('normaliseBeds maps hospital rows, drops excluded beds and sorts by code', 
   assert.deepEqual(normaliseBeds(null), []);
 });
 
+test('normaliseBeds reads BedDesc and drops a whole excluded group', () => {
+  const rows = [
+    { PatientMRNO: 'K0300000000001', BedDesc: 'SUR-D-04(M)' },
+    { PatientMRNO: 'K0300000000002', BedDesc: 'ORHB-5' },
+    { PatientMRNO: 'K0300000000003', BedDesc: 'ORHBX-1' },
+    { PatientMRNO: 'K0300000000004', BedId: 'K031539' },
+  ];
+  assert.deepEqual(normaliseBeds(rows, ['ORHB']).map((b) => b.code), ['K031539', 'ORHBX-1', 'SUR-D-04(M)']);
+});
+
+test('validateTask accepts the hospital bed codes with brackets', () => {
+  assert.equal(validateTask({ bedCode: 'sur-d-04(m)', description: 'Review', assignedTo: 1 }).data.bedCode, 'SUR-D-04(M)');
+  assert.equal(validateTask({ bedCode: 'SUR-D-04(M)', description: 'Review', assignedTo: 1 }).errors, null);
+  assert.ok(validateTask({ bedCode: 'SUR D 04', description: 'Review', assignedTo: 1 }).errors.bedCode);
+});
+
 test('normaliseBeds keeps the latest admission when a bed is listed twice', () => {
   const beds = normaliseBeds([
     { BedId: 'K031539', PatientMRNO: 'K0300000000001', AdmissionDate: '2026-10-01T09:00:00' },

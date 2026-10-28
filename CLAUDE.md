@@ -59,9 +59,9 @@ npm workspaces monorepo: `client/` (React 18, Vite 6, React Router 6), `server/`
   - Print calls `window.print()`. `RosterPrint` (a black-and-white A4 landscape grid, with designation abbreviations from `designationShort`) is hidden on screen, and the `@media print` block at the end of `styles.css` swaps it in for the page.
 - **Tasks:**
   - Beds come from the hospital system (`BEDS_API_URL`, `GetDoctorAdmittedPatients`) via `server/src/hospitalBeds.js` and `GET /api/beds`.
-    - Only occupied beds are listed, with codes like `K031539`. Each has patient name, MR number, consultant and unit.
+    - Only occupied beds are listed. Codes come from the feed's `BedDesc`, e.g. `SUR-D-04(M)`, `SUR-D-HDU11`, `PR-A-39`; older rows used `BedId`, e.g. `K031539`, and both are read. Each bed has patient name, MR number, consultant and unit.
     - The API takes ~10 s, so results are cached (`BEDS_CACHE_SECONDS`, default 300) and preloaded at server start. Concurrent requests share one fetch. If a refresh fails, the last list is served with `stale: true`.
-    - `BEDS_EXCLUDE` (default `ORHB-1`, a holding area with ~80 stale admissions) drops pseudo-beds.
+    - `BEDS_EXCLUDE` (default `ORHB`, a holding area with ~80 stale admissions) drops pseudo-beds. An entry matches that exact code or any `<entry>-…`, because the hospital renumbers it (`ORHB-1` became `ORHB-5`). If the Ward suddenly shows 0 beds, check the feed's field names first: `fetchBeds` logs rows vs beds for each fetch.
   - Tasks follow the patient. On create, the server looks up the bed in the cached list and stores `patient_mr`, never trusting the client for it. Ward and the bed dialog match tasks by `patient_mr`, falling back to `bed_code` for older rows without one.
   - Any signed-in user can assign tasks to a doctor (consultant, manager or doctor role), one or a batch of up to 20 saved in one transaction, and can complete any open task. `completed_by` records who completed it.
   - Tasks belong to the day they were created. Ward, the bed dialog, My tasks and the badge show only today's tasks. The Archive page (`/archive?status=&bed=&mine=1`) lists earlier days, undone by default, where they can still be completed.

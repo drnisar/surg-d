@@ -3,13 +3,17 @@ import { pool } from './db.js';
 
 const tidy = (value) => String(value ?? '').trim().replace(/\s+/g, ' ');
 
+// An exclude entry drops that exact bed and, as a group, any bed named `<entry>-...` (ORHB covers ORHB-5).
+const isExcluded = (code, exclude) => exclude.some((e) => code === e || code.startsWith(`${e}-`));
+
 // Hospital API rows -> one entry per ward bed, sorted by code. Excluded pseudo-beds are dropped.
 // If the API ever lists two patients on one bed, the most recent admission wins.
+// The bed field was `BedId` (e.g. K031539) and is now `BedDesc` (e.g. SUR-D-04(M)); both are read.
 export function normaliseBeds(rows, exclude = []) {
   const byCode = new Map();
   for (const row of Array.isArray(rows) ? rows : []) {
-    const code = tidy(row.BedId).toUpperCase();
-    if (!code || exclude.includes(code)) continue;
+    const code = tidy(row.BedDesc ?? row.BedId).toUpperCase();
+    if (!code || isExcluded(code, exclude)) continue;
     const bed = {
       code,
       patientName: tidy(row.PatientName) || null,
@@ -57,7 +61,14 @@ async function store({ beds, fetchedAt }) {
 async function fetchBeds() {
   const res = await fetch(config.bedsApi.url, { signal: AbortSignal.timeout(config.bedsApi.timeoutMs) });
   if (!res.ok) throw new Error(`Hospital beds API responded ${res.status}`);
-  const beds = normaliseBeds(await res.json(), config.bedsApi.excludeBeds);
+  const rows = await res.json();
+  // Anything but a list (e.g. an error object) must not replace the last good list with an empty ward.
+  if (!Array.isArray(rows)) {
+    const shape = rows && typeof rows === 'object' ? `object with keys ${Object.keys(rows).join(', ')}` : typeof rows;
+    throw new Error(`Hospital beds API returned ${shape}, not a list`);
+  }
+  const beds = normaliseBeds(rows, config.bedsApi.excludeBeds);
+  console.log(`Hospital beds API: ${rows.length} rows, ${beds.length} beds`);
   cache = { beds, fetchedAt: new Date().toISOString() };
   await store(cache);
   return cache;

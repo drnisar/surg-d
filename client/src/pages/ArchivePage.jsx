@@ -9,7 +9,7 @@ import TaskList from '../components/TaskList.jsx';
 const COMPLETED_CAP = 200; // matches the server's limit on completed tasks per request
 
 // Tasks created before today, grouped by day (newest first). Undone tasks can still be completed here.
-// Filters live in the URL (?status=completed&patient=<MR>&bed=K031539&mine=1) so other pages can link to a view.
+// Filters live in the URL (?status=completed&patient=<MR>&bed=SUR-D-04(M)&mine=1) so other pages can link to a view.
 export default function ArchivePage() {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();

@@ -61,7 +61,7 @@ In Vercel, open **server → Settings → Environment Variables** and add these 
 | `ALLOW_IMPERSONATION` | `false` (turns off Switch user) |
 | `BEDS_API_URL` | the hospital feed URL from `server/.env` |
 | `BEDS_CACHE_SECONDS` | `300` |
-| `BEDS_EXCLUDE` | `ORHB-1` |
+| `BEDS_EXCLUDE` | `ORHB` (a group: also hides `ORHB-1`, `ORHB-5`, …) |
 
 Environment variables only take effect on the next deployment, so redeploy the server after changing them.
 

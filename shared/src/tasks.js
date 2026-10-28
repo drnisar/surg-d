@@ -1,8 +1,8 @@
 import { ROLES } from './designations.js';
 import { ROSTER_EDITOR_ROLES } from './roster.js';
 
-// Beds and their patients come from the hospital API via the server's /api/beds (e.g. 'K031539').
-export const BED_CODE_PATTERN = /^[A-Z0-9-]{1,20}$/;
+// Beds and their patients come from the hospital API via the server's /api/beds (e.g. 'SUR-D-04(M)').
+export const BED_CODE_PATTERN = /^[A-Z0-9()-]{1,20}$/;
 
 export const TASK_ASSIGNEE_ROLES = [ROLES.CONSULTANT, ROLES.MANAGER, ROLES.DOCTOR];
 export const TASK_MAX_LENGTH = 500;

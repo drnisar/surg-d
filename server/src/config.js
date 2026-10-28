@@ -13,8 +13,8 @@ export const config = {
     url: process.env.BEDS_API_URL ?? 'http://182.188.28.220:8034/api/Patient/GetDoctorAdmittedPatients',
     cacheSeconds: Number(process.env.BEDS_CACHE_SECONDS ?? 300),
     timeoutMs: Number(process.env.BEDS_TIMEOUT_MS ?? 30000),
-    // Pseudo-beds that are not ward beds (ORHB-1 is a holding area with long-stale admissions).
-    excludeBeds: (process.env.BEDS_EXCLUDE ?? 'ORHB-1').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
+    // Pseudo-beds that are not ward beds. ORHB is a holding area with long-stale admissions (ORHB-1, ORHB-5, …).
+    excludeBeds: (process.env.BEDS_EXCLUDE ?? 'ORHB').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
   },
   db: {
     host: process.env.DB_HOST ?? '127.0.0.1',
