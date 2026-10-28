@@ -51,6 +51,24 @@ rosterRouter.get(
   })
 );
 
+// The signed-in user's own duties for `days` days starting at `from` (their local date).
+const MY_DUTIES_MAX_DAYS = 62;
+rosterRouter.get(
+  '/mine',
+  asyncHandler(async (req, res) => {
+    if (!isValidDate(req.query.from)) throw new HttpError(400, 'from must be YYYY-MM-DD');
+    const days = Number(req.query.days ?? 14);
+    if (!Number.isInteger(days) || days < 1 || days > MY_DUTIES_MAX_DAYS) {
+      throw new HttpError(400, `days must be 1-${MY_DUTIES_MAX_DAYS}`);
+    }
+    const [rows] = await pool.query(
+      `${SELECT_ASSIGNMENTS} WHERE d.employee_id = ? AND d.duty_date BETWEEN ? AND DATE_ADD(?, INTERVAL ? DAY) ${ORDER}`,
+      [req.user.id, req.query.from, req.query.from, days - 1]
+    );
+    res.json({ from: req.query.from, days, assignments: rows.map(toAssignmentDto) });
+  })
+);
+
 // Place employees at one location for every (date, shift) given. Used for a single slot or a whole day.
 rosterRouter.put(
   '/assignments',

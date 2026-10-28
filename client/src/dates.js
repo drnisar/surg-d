@@ -25,6 +25,7 @@ export function formatDay(date) {
   return {
     day: local.getDate(),
     weekday: local.toLocaleDateString('en-GB', { weekday: 'short' }),
+    short: local.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }),
     long: local.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
     isWeekend: local.getDay() === 0,
   };

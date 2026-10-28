@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LOCATIONS, SHIFTS } from '@surg-d/shared';
+import { LOCATIONS, ROSTER_ELIGIBLE_ROLES, SHIFTS } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import DayToolbar from '../components/DayToolbar.jsx';
+import MyDutiesList from '../components/MyDutiesList.jsx';
 import ShiftDutyCards from '../components/ShiftDutyCards.jsx';
 import { today } from '../dates.js';
+
+const MY_DUTY_DAYS = 14;
 
 export default function TodayPage() {
   const { user } = useAuth();
   const [date, setDate] = useState(today);
   const [assignments, setAssignments] = useState(null);
+  const [myUpcoming, setMyUpcoming] = useState(null);
   const [error, setError] = useState('');
+  const rostered = ROSTER_ELIGIBLE_ROLES.includes(user.role);
+  const todayDate = today();
 
   useEffect(() => {
     let current = true;
@@ -23,6 +29,14 @@ export default function TodayPage() {
       current = false;
     };
   }, [date]);
+
+  // Upcoming duties are counted from today, so browsing other days doesn't move the list.
+  useEffect(() => {
+    if (!rostered) return;
+    api(`/roster/mine?from=${todayDate}&days=${MY_DUTY_DAYS}`)
+      .then((data) => setMyUpcoming(data.assignments))
+      .catch((err) => setError(err.message));
+  }, [rostered, todayDate]);
 
   const myDuties = (assignments ?? []).filter((a) => a.employee.id === user.id);
 
@@ -39,6 +53,16 @@ export default function TodayPage() {
             .map((a) => `${SHIFTS.find((s) => s.key === a.shift).label} — ${LOCATIONS.find((l) => l.key === a.location).name}`)
             .join(', ')}
         </p>
+      )}
+
+      {myUpcoming && (
+        <MyDutiesList
+          duties={myUpcoming}
+          days={MY_DUTY_DAYS}
+          selectedDate={date}
+          todayDate={todayDate}
+          onSelectDate={setDate}
+        />
       )}
 
       {assignments === null && !error ? (
