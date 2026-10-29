@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DESIGNATIONS, ROLE_LABELS, addableDesignations, designationLabel, whatsappUrl } from '@surg-d/shared';
+import { DESIGNATIONS, addableDesignations } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import EmployeeForm from '../components/EmployeeForm.jsx';
+import EmployeesTable from '../components/EmployeesTable.jsx';
 
 export default function EmployeesPage() {
   const { user } = useAuth();
@@ -64,64 +65,13 @@ export default function EmployeesPage() {
 
       {error && <p className="error">{error}</p>}
 
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>MR number</th>
-              <th>Name</th>
-              <th>Designation</th>
-              <th>Role</th>
-              <th>Email</th>
-              <th>Official email</th>
-              <th>Phone</th>
-              {isAdmin && <th />}
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((e) => (
-              <tr key={e.id}>
-                <td className="mono">{e.mrNumber}</td>
-                <td>{e.fullName}</td>
-                <td>{designationLabel(e.designation) || '—'}</td>
-                <td>
-                  <span className={`badge role-${e.role}`}>{ROLE_LABELS[e.role]}</span>
-                </td>
-                <td>{e.email}</td>
-                <td>{e.officialEmail}</td>
-                <td className="mono">
-                  {whatsappUrl(e.phone) ? (
-                    <a href={whatsappUrl(e.phone)} target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
-                      {e.phone}
-                    </a>
-                  ) : (
-                    e.phone
-                  )}
-                </td>
-                {isAdmin && (
-                  <td className="actions">
-                    <button className="btn ghost" onClick={() => setEditing(e)}>
-                      Edit
-                    </button>
-                    {e.id !== user.id && (
-                      <button className="btn ghost danger" onClick={() => deactivate(e)}>
-                        Deactivate
-                      </button>
-                    )}
-                  </td>
-                )}
-              </tr>
-            ))}
-            {!employees.length && (
-              <tr>
-                <td colSpan={8} className="muted center">
-                  No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <EmployeesTable
+        employees={employees}
+        canManage={isAdmin}
+        currentUserId={user.id}
+        onEdit={setEditing}
+        onDeactivate={deactivate}
+      />
 
       {editing && (
         <EmployeeForm
