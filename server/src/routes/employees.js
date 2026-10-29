@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { DESIGNATION_KEYS, ROLES, addableDesignations, designationLabel } from '@surg-d/shared';
+import { DESIGNATION_KEYS, ROLES, addableDesignations, canEditEmployee, designationLabel } from '@surg-d/shared';
 import { pool } from '../db.js';
 import { asyncHandler, HttpError } from '../errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -52,23 +52,31 @@ async function toColumns(data) {
   return columns;
 }
 
+const findMe = async (id) =>
+  (await pool.query('SELECT role, designation FROM employees WHERE id = ? AND is_active = 1', [id]))[0][0] ?? null;
+
+// Only the admin may create or make admin accounts, so `role` is ignored for everyone else.
+const bodyFor = (me, body) => (me.role === ROLES.ADMIN ? body ?? {} : { ...body, role: undefined });
+
+function checkDesignation(me, data, verb) {
+  const allowed = addableDesignations(me);
+  if (me.role !== ROLES.ADMIN && data.designation !== undefined && !allowed.includes(data.designation)) {
+    throw new HttpError(422, 'Validation failed', {
+      designation: `You can ${verb} only ${allowed.map(designationLabel).join(' or ')}`,
+    });
+  }
+}
+
 // The admin adds anyone; some designations may add juniors (see addableDesignations).
 employeesRouter.post(
   '/',
   asyncHandler(async (req, res) => {
-    const [me] = await pool.query('SELECT role, designation FROM employees WHERE id = ? AND is_active = 1', [req.user.id]);
-    const allowed = me[0] ? addableDesignations(me[0]) : [];
-    if (!allowed.length) throw new HttpError(403, 'Insufficient permissions');
+    const me = await findMe(req.user.id);
+    if (!me || !addableDesignations(me).length) throw new HttpError(403, 'Insufficient permissions');
 
-    // Only the admin may create admin accounts, so `role` is ignored for everyone else.
-    const isAdmin = me[0].role === ROLES.ADMIN;
-    const { data, errors } = validateEmployee(isAdmin ? req.body ?? {} : { ...req.body, role: undefined });
+    const { data, errors } = validateEmployee(bodyFor(me, req.body));
     if (errors) throw new HttpError(422, 'Validation failed', errors);
-    if (!isAdmin && !allowed.includes(data.designation)) {
-      throw new HttpError(422, 'Validation failed', {
-        designation: `You can add only ${allowed.map(designationLabel).join(' or ')}`,
-      });
-    }
+    checkDesignation(me, data, 'add');
 
     const columns = await toColumns(data);
     const [result] = await pool.query('INSERT INTO employees SET ?', [columns]);
@@ -77,12 +85,18 @@ employeesRouter.post(
   })
 );
 
+// The admin edits anyone; others edit only the designations they may add, and keep them within those.
 employeesRouter.put(
   '/:id',
-  requireRole(ROLES.ADMIN),
   asyncHandler(async (req, res) => {
-    const { data, errors } = validateEmployee(req.body ?? {}, { partial: true });
+    const me = await findMe(req.user.id);
+    const [target] = await pool.query('SELECT designation FROM employees WHERE id = ?', [req.params.id]);
+    if (!target[0]) throw new HttpError(404, 'Employee not found');
+    if (!me || !canEditEmployee(me, target[0])) throw new HttpError(403, 'Insufficient permissions');
+
+    const { data, errors } = validateEmployee(bodyFor(me, req.body), { partial: true });
     if (errors) throw new HttpError(422, 'Validation failed', errors);
+    checkDesignation(me, data, 'set');
 
     const columns = await toColumns(data);
     if (Object.keys(columns).length) {

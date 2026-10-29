@@ -1,7 +1,8 @@
 import { designationLabel, whatsappUrl } from '@surg-d/shared';
 
-// Staff list. Edit/Deactivate actions show only when `canManage`; nobody can deactivate themselves.
-export default function EmployeesTable({ employees, canManage, currentUserId, onEdit, onDeactivate }) {
+// Staff list. `canEdit(employee)` / `canDeactivate(employee)` decide which action buttons each row gets.
+export default function EmployeesTable({ employees, canEdit, canDeactivate, onEdit, onDeactivate }) {
+  const hasActions = employees.some((e) => canEdit(e) || canDeactivate(e));
   return (
     <div className="table-wrap">
       <table>
@@ -12,7 +13,7 @@ export default function EmployeesTable({ employees, canManage, currentUserId, on
             <th>Designation</th>
             <th>Official email</th>
             <th>Phone</th>
-            {canManage && <th />}
+            {hasActions && <th />}
           </tr>
         </thead>
         <tbody>
@@ -31,12 +32,14 @@ export default function EmployeesTable({ employees, canManage, currentUserId, on
                   e.phone
                 )}
               </td>
-              {canManage && (
+              {hasActions && (
                 <td className="actions">
-                  <button className="btn ghost" onClick={() => onEdit(e)}>
-                    Edit
-                  </button>
-                  {e.id !== currentUserId && (
+                  {canEdit(e) && (
+                    <button className="btn ghost" onClick={() => onEdit(e)}>
+                      Edit
+                    </button>
+                  )}
+                  {canDeactivate(e) && (
                     <button className="btn ghost danger" onClick={() => onDeactivate(e)}>
                       Deactivate
                     </button>
@@ -47,7 +50,7 @@ export default function EmployeesTable({ employees, canManage, currentUserId, on
           ))}
           {!employees.length && (
             <tr>
-              <td colSpan={canManage ? 6 : 5} className="muted center">
+              <td colSpan={hasActions ? 6 : 5} className="muted center">
                 No employees found
               </td>
             </tr>

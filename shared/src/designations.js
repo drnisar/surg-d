@@ -50,3 +50,9 @@ export function addableDesignations({ role, designation }) {
   if (role === ROLES.ADMIN) return DESIGNATION_KEYS;
   return ADDABLE_BY_DESIGNATION[designation] ?? [];
 }
+
+// Whoever may add a designation may also edit employees who hold it; the admin edits anyone.
+export function canEditEmployee(user, employee) {
+  if (user.role === ROLES.ADMIN) return true;
+  return Boolean(employee.designation) && addableDesignations(user).includes(employee.designation);
+}

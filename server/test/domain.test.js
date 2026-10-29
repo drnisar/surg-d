@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addableDesignations, buildMrNumber, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
+import { addableDesignations, buildMrNumber, canEditEmployee, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
 import { validateEmployee, validatePasswordChange } from '../src/employees.js';
 
 test('builds MR number from employee code', () => {
@@ -97,4 +97,14 @@ test('addableDesignations: admin adds anyone, an ER adds TMOs and HOs, others no
   ]);
   assert.deepEqual(addableDesignations({ role: 'manager', designation: 'trainee_registrar' }), []);
   assert.deepEqual(addableDesignations({ role: 'consultant', designation: 'professor' }), []);
+});
+
+test('canEditEmployee: an ER edits only TMOs and HOs, the admin anyone', () => {
+  const er = { role: 'manager', designation: 'experiential_registrar' };
+  assert.equal(canEditEmployee(er, { designation: 'house_officer' }), true);
+  assert.equal(canEditEmployee(er, { designation: 'trainee_medical_officer' }), true);
+  assert.equal(canEditEmployee(er, { designation: 'experiential_registrar' }), false);
+  assert.equal(canEditEmployee(er, { designation: null }), false);
+  assert.equal(canEditEmployee({ role: 'doctor', designation: 'house_officer' }, { designation: 'house_officer' }), false);
+  assert.equal(canEditEmployee({ role: 'admin', designation: null }, { designation: 'professor' }), true);
 });

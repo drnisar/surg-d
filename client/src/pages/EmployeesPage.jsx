@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DESIGNATIONS, addableDesignations } from '@surg-d/shared';
+import { DESIGNATIONS, addableDesignations, canEditEmployee } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import EmployeeForm from '../components/EmployeeForm.jsx';
@@ -67,8 +67,8 @@ export default function EmployeesPage() {
 
       <EmployeesTable
         employees={employees}
-        canManage={isAdmin}
-        currentUserId={user.id}
+        canEdit={(e) => canEditEmployee(user, e)}
+        canDeactivate={(e) => isAdmin && e.id !== user.id}
         onEdit={setEditing}
         onDeactivate={deactivate}
       />
@@ -76,7 +76,7 @@ export default function EmployeesPage() {
       {editing && (
         <EmployeeForm
           employee={editing.id ? editing : null}
-          designations={editing.id ? undefined : canAdd}
+          designations={canAdd}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
