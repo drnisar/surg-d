@@ -49,7 +49,7 @@ npm workspaces monorepo: `client/` (React 18, Vite 6, React Router 6), `server/`
 
 ## Domain rules
 
-- **MR number:** `K03` + `6` + `00` + employee code padded to 8 digits (`buildMrNumber`). Staff enter only the employee code; the login form also expands a bare code.
+- **MR number:** `K03` + employee type + `00` + employee code padded to 8 digits (`buildMrNumber`). Staff enter only the employee code: `1100` uses the default type `6` (`K0360000001100`), and `5-1100` sets the type digit (`K0350000001100`). `employeeCodeOf` turns an MR number back into that form for editing. The login form expands either form.
 - **Phone:** stored as country code (`+92`) plus the number with one leading zero removed.
 - **Adding staff:** the admin adds anyone. An Experiential Registrar may add Trainee Medical Officers and House Officers (`addableDesignations` in `shared/`, keyed by designation because ER and TR share the manager role). `POST /api/employees` looks up the caller's designation and ignores `role` from non-admins, so only the admin can create admin accounts. Editing and deactivating staff stay admin-only.
 - **Roster:** Morning and Evening shifts × places of duty (Ward, SAU, OR, OPD).

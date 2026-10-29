@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { buildMrNumber } from '@surg-d/shared';
+import { EMPLOYEE_CODE_PATTERN, buildMrNumber } from '@surg-d/shared';
 
-// A bare employee code (e.g. 1100) is expanded to the full MR number (K0360000001100).
+// A bare employee code is expanded to the full MR number: 1100 -> K0360000001100, 5-1100 -> K0350000001100.
 function expandIdentifier(value) {
   const trimmed = value.trim();
-  if (!/^\d{1,8}$/.test(trimmed)) return trimmed;
+  if (!EMPLOYEE_CODE_PATTERN.test(trimmed)) return trimmed;
   try {
     return buildMrNumber(trimmed);
   } catch {

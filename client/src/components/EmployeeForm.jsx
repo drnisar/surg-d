@@ -5,7 +5,7 @@ import {
   DESIGNATION_KEYS,
   ROLE_LABELS,
   buildMrNumber,
-  parseMrNumber,
+  employeeCodeOf,
   roleForDesignation,
 } from '@surg-d/shared';
 import { api } from '../api.js';
@@ -22,7 +22,7 @@ function previewMr(code) {
 export default function EmployeeForm({ employee, designations = DESIGNATION_KEYS, onClose, onSaved }) {
   const isEdit = Boolean(employee);
   const [form, setForm] = useState({
-    employeeCode: employee ? parseMrNumber(employee.mrNumber)?.employeeCode ?? '' : '',
+    employeeCode: employee ? employeeCodeOf(employee.mrNumber) : '',
     fullName: employee?.fullName ?? '',
     email: employee?.email ?? '',
     officialEmail: employee?.officialEmail ?? '',
@@ -76,7 +76,7 @@ export default function EmployeeForm({ employee, designations = DESIGNATION_KEYS
           {field(
             'employeeCode',
             'Employee code',
-            <input value={form.employeeCode} onChange={set('employeeCode')} inputMode="numeric" maxLength={8} required />
+            <input value={form.employeeCode} onChange={set('employeeCode')} maxLength={10} placeholder="1100 or 5-1100" required />
           )}
           <label>
             MR number

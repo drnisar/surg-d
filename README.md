@@ -50,7 +50,8 @@ or its MR number `K0360000000001`). Users can log in with their MR number, email
 | — (setup account) | Admin |
 
 **MR number** (`shared/src/mrNumber.js`), 14 characters, e.g. `K0360000001100`:
-hospital code `K03` + employee type `6` + self `00` + employee code zero-padded to 8 digits.
+hospital code `K03` + employee type (default `6`) + self `00` + employee code zero-padded to 8 digits.
+An employee code of `1100` gives `K0360000001100`; `5-1100` sets the type digit and gives `K0350000001100`.
 The admin enters only the employee code; the MR number is generated.
 
 **Phone** (`shared/src/phone.js`): stored as country code (`+92`) + number with

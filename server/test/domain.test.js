@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addableDesignations, buildMrNumber, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
+import { addableDesignations, buildMrNumber, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
 import { validateEmployee, validatePasswordChange } from '../src/employees.js';
 
 test('builds MR number from employee code', () => {
@@ -10,6 +10,14 @@ test('builds MR number from employee code', () => {
   assert.throws(() => buildMrNumber('123456789'));
   assert.throws(() => buildMrNumber('abc'));
   assert.throws(() => buildMrNumber('0'));
+  // A type digit and hyphen set the 4th character; the code still fills the last 8.
+  assert.equal(buildMrNumber('5-1234'), 'K0350000001234');
+  assert.equal(buildMrNumber(' 9-42 '), 'K0390000000042');
+  assert.throws(() => buildMrNumber('55-1234'));
+  assert.throws(() => buildMrNumber('5-'));
+  assert.throws(() => buildMrNumber('5-0'));
+  assert.equal(employeeCodeOf('K0350000001234'), '5-1234');
+  assert.equal(employeeCodeOf('K0360000001100'), '1100');
 });
 
 test('parses and validates MR number', () => {
@@ -20,7 +28,7 @@ test('parses and validates MR number', () => {
     employeeCode: '1100',
   });
   assert.ok(isValidEmployeeMr('k0360000001100'));
-  assert.ok(!isValidEmployeeMr('K0350000001100'));
+  assert.ok(isValidEmployeeMr('K0350000001100')); // any employee type digit
   assert.ok(!isValidEmployeeMr('K0360100001100'));
   assert.ok(!isValidEmployeeMr('K036000000110'));
 });
