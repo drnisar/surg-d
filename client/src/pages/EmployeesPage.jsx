@@ -58,10 +58,10 @@ export default function EmployeesPage() {
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h2 className="text-xl font-semibold">Ward staff</h2>
-        <span className="flex-1" />
+        <h2 className="w-full text-xl font-semibold sm:w-auto">Ward staff</h2>
+        <span className="hidden flex-1 sm:block" />
         <Input
-          className="w-56"
+          className="w-full sm:w-56"
           placeholder="Search name, MR, email"
           value={filters.q}
           onChange={(e) => setFilters({ ...filters, q: e.target.value })}
@@ -70,7 +70,7 @@ export default function EmployeesPage() {
           value={filters.designation || ALL}
           onValueChange={(v) => setFilters({ ...filters, designation: v === ALL ? '' : v })}
         >
-          <SelectTrigger className="w-52">
+          <SelectTrigger className="w-full sm:w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
