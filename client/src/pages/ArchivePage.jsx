@@ -111,7 +111,7 @@ export default function ArchivePage() {
             Bed {bed} ×
           </button>
         )}
-        <label className="inline">
+        <label className="inline-check">
           <input type="checkbox" checked={mine} onChange={(e) => setFilter('mine', e.target.checked ? '1' : '')} />
           Only mine
         </label>

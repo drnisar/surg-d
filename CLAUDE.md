@@ -33,7 +33,7 @@ node --test --test-name-pattern="phone" "test/**/*.test.js"
 
 ## Architecture
 
-npm workspaces monorepo: `client/` (React 18, Vite 6, React Router 6), `server/` (Express 4, `mysql2/promise`, JWT), `shared/` (plain ES modules).
+npm workspaces monorepo: `client/` (React 19, Vite 6, React Router 6, Tailwind CSS 4 + shadcn/ui), `server/` (Express 4, `mysql2/promise`, JWT), `shared/` (plain ES modules).
 
 - **`shared/` is the source of domain rules.** It covers designations → roles, MR number build/parse, phone normalisation, shifts, places of duty, beds, task templates, and who may be rostered, assigned tasks or allocate beds. Both sides import it as `@surg-d/shared` straight from source; there's no build. A rule that both the UI and the API need goes here, so the client can preview what the server will enforce (e.g. the generated MR number, the derived role).
 - **Request path:** the client calls `api('/path')` (`client/src/api.js`), which prefixes `/api` and adds the bearer token from `localStorage`. Vite proxies `/api` to `:4000`, so there's no CORS in dev.
@@ -43,7 +43,12 @@ npm workspaces monorepo: `client/` (React 18, Vite 6, React Router 6), `server/`
   - Passwords: users change their own on Profile (`POST /api/auth/password`, which checks the current one and is refused while impersonating). The admin resets anyone's from Staff → Edit. `PASSWORD_MIN_LENGTH` in `shared/` applies to both.
   - On the client, `AuthProvider` (`auth.jsx`) holds the user.
   - `TaskBadgeProvider` (`taskBadge.jsx`) polls the unseen-task count. It is keyed by `user.id` in `App.jsx`, so switching user remounts every page.
-- **Client structure:** `pages/` own data loading and state; `components/` are presentational and take props and callbacks. Dates are handled as local `YYYY-MM-DD` / `YYYY-MM` strings (`client/src/dates.js`), and the server returns `DATE` columns via `DATE_FORMAT`, so nothing shifts across timezones.
+- **Client structure:** `pages/` own data loading and state; `components/` are presentational and take props and callbacks.
+- **UI (moving to shadcn/ui, screen by screen):** shadcn components live in `client/src/components/ui/` (add more with `npx shadcn@latest add <name>` from `client/`; `components.json` is set for JavaScript). Import them with the `@/` alias (`@/components/ui/button`) and merge classes with `cn()` from `@/lib/utils`. The theme is shadcn's default neutral one, in `src/index.css`.
+  - Converted so far: the Staff page (`EmployeesPage`, `EmployeesTable`, `EmployeeForm`). Everything else still uses the hand-written `styles.css`.
+  - `styles.css` is imported into the `legacy` cascade layer: above Tailwind's reset, so unconverted screens keep their look, and below Tailwind utilities, so shadcn components win. Its colour variables are prefixed `--app-` so they don't clash with shadcn's (`--primary`, `--border`…), and its element rules skip shadcn elements with `:not([data-slot])`.
+  - Don't reuse a Tailwind utility name as a legacy class: `.grid`, `.container` and `.inline` were renamed (`.page`, `.inline-check`) for that reason.
+  - Radix `Select` items can't have an empty value; use a sentinel such as `'all'` or `undefined` for "none". Dates are handled as local `YYYY-MM-DD` / `YYYY-MM` strings (`client/src/dates.js`), and the server returns `DATE` columns via `DATE_FORMAT`, so nothing shifts across timezones.
 - **Deployment (see `DEPLOY.md`):** two Vercel projects deploy `main`. **server** (Root Directory `server`, Express preset) serves the default export of `src/app.js`, and `server/vercel.json` pins it to `sin1`. **client** (Root Directory `client`, Vite) has a `client/vercel.json` that proxies `/api/*` to the server's URL and sends other paths to `index.html`, so the browser only talks to one origin (no CORS). The database is TiDB Cloud (MySQL-compatible, needs `DB_SSL=true`). `server/src/index.js` is only the local long-running entry, so don't put start-up work there that production needs. The bed list is also kept in `beds_cache`, so serverless cold starts don't wait on the hospital API.
 - **Database:** `server/scripts/migrate.js` creates the database if it's missing, then applies `server/db/migrations/NNN_*.sql` in order. Each applied file is recorded in `schema_migrations`. Add the next numbered file for any schema change; never edit an applied one. Employees are soft-deleted (`is_active = 0`).
 
@@ -96,7 +101,8 @@ Library IDs for this project. Prefer docs that match the installed major version
 
 | Library (installed) | Context7 ID                                                  |
 | ------------------- | ------------------------------------------------------------ |
-| React 18.3          | `/reactjs/react.dev`                                         |
+| React 19.3          | `/reactjs/react.dev`                                         |
+| shadcn/ui           | `/websites/ui_shadcn`                                        |
 | React Router 6.30   | `/websites/reactrouter_6_30_3`                               |
 | Vite 6.4            | `/websites/v6_vite_dev`                                      |
 | Express 4.22        | `/expressjs/express` (check examples are not Express 5-only) |

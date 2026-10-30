@@ -1,62 +1,72 @@
 import { designationLabel, whatsappUrl } from '@surg-d/shared';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // Staff list. `canEdit(employee)` / `canDeactivate(employee)` decide which action buttons each row gets.
 export default function EmployeesTable({ employees, canEdit, canDeactivate, onEdit, onDeactivate }) {
   const hasActions = employees.some((e) => canEdit(e) || canDeactivate(e));
   return (
-    <div className="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>MR number</th>
-            <th>Name</th>
-            <th>Designation</th>
-            <th>Official email</th>
-            <th>Phone</th>
-            {hasActions && <th />}
-          </tr>
-        </thead>
-        <tbody>
+    <div className="rounded-md border bg-card">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>MR number</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Designation</TableHead>
+            <TableHead>Official email</TableHead>
+            <TableHead>Phone</TableHead>
+            {hasActions && <TableHead />}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {employees.map((e) => (
-            <tr key={e.id}>
-              <td className="mono">{e.mrNumber}</td>
-              <td>{e.fullName}</td>
-              <td>{designationLabel(e.designation) || '—'}</td>
-              <td>{e.officialEmail}</td>
-              <td className="mono">
+            <TableRow key={e.id}>
+              <TableCell className="font-mono">{e.mrNumber}</TableCell>
+              <TableCell className="font-medium">{e.fullName}</TableCell>
+              <TableCell>{designationLabel(e.designation) || '—'}</TableCell>
+              <TableCell>{e.officialEmail}</TableCell>
+              <TableCell className="font-mono">
                 {whatsappUrl(e.phone) ? (
-                  <a href={whatsappUrl(e.phone)} target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
+                  <a
+                    href={whatsappUrl(e.phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Chat on WhatsApp"
+                    className="underline-offset-4 hover:underline"
+                  >
                     {e.phone}
                   </a>
                 ) : (
                   e.phone
                 )}
-              </td>
+              </TableCell>
               {hasActions && (
-                <td className="actions">
-                  {canEdit(e) && (
-                    <button className="btn ghost" onClick={() => onEdit(e)}>
-                      Edit
-                    </button>
-                  )}
-                  {canDeactivate(e) && (
-                    <button className="btn ghost danger" onClick={() => onDeactivate(e)}>
-                      Deactivate
-                    </button>
-                  )}
-                </td>
+                <TableCell>
+                  <div className="flex justify-end gap-2">
+                    {canEdit(e) && (
+                      <Button variant="outline" size="sm" onClick={() => onEdit(e)}>
+                        Edit
+                      </Button>
+                    )}
+                    {canDeactivate(e) && (
+                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => onDeactivate(e)}>
+                        Deactivate
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
               )}
-            </tr>
+            </TableRow>
           ))}
           {!employees.length && (
-            <tr>
-              <td colSpan={hasActions ? 6 : 5} className="muted center">
+            <TableRow>
+              <TableCell colSpan={hasActions ? 6 : 5} className="h-24 text-center text-muted-foreground">
                 No employees found
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

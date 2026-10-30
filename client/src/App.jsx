@@ -5,7 +5,7 @@ import { TaskBadgeProvider } from './taskBadge.jsx';
 
 export default function App() {
   const { user, loading } = useAuth();
-  if (loading) return <p className="container">Loading…</p>;
+  if (loading) return <p className="page">Loading…</p>;
   if (!user) return <SignedOutRoutes />;
   // Keyed by user so switching user remounts every page with fresh state.
   return (

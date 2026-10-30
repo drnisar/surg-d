@@ -5,7 +5,7 @@ Single repo (npm workspaces) containing:
 
 | Path      | What                                                              |
 |-----------|-------------------------------------------------------------------|
-| `client/` | React 18 + Vite front end                                         |
+| `client/` | React 19 + Vite front end (Tailwind CSS + shadcn/ui)              |
 | `server/` | Express REST API backed by MySQL (`mysql2`)                       |
 | `shared/` | Domain rules used by both: designations → roles, MR number, phone |
 

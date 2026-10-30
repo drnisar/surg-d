@@ -78,11 +78,11 @@ export default function RosterPicker({
 
         {wholeDay && (
           <div className="mode">
-            <label className="inline">
+            <label className="inline-check">
               <input type="radio" checked={mode === 'add'} onChange={() => setMode('add')} />
               Add to both shifts (keep existing)
             </label>
-            <label className="inline">
+            <label className="inline-check">
               <input type="radio" checked={mode === 'replace'} onChange={() => setMode('replace')} />
               Replace both shifts with this selection
             </label>

@@ -153,12 +153,12 @@ export default function WardPage() {
         </div>
         <span className="spacer" />
         <input placeholder="Search bed, patient, MR, consultant" value={query} onChange={(e) => setQuery(e.target.value)} />
-        <label className="inline">
+        <label className="inline-check">
           <input type="checkbox" checked={onlyWithTasks} onChange={(e) => setOnlyWithTasks(e.target.checked)} />
           Only beds with open tasks
         </label>
         {hasBeds && (
-          <label className="inline">
+          <label className="inline-check">
             <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} />
             My beds
           </label>

@@ -19,7 +19,7 @@ export default function Layout({ children }) {
         </div>
       )}
       <Navbar user={user} taskCount={count} onLogout={logout} />
-      <main className="container">{children}</main>
+      <main className="page">{children}</main>
     </>
   );
 }
