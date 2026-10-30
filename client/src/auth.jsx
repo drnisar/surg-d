@@ -1,11 +1,19 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { api, tokenStore } from './api.js';
+import { api, setUnauthorizedHandler, tokenStore } from './api.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(Boolean(tokenStore.get()));
+
+  // Any request rejected for its token signs the user out; the signed-out routes then show the login page.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      tokenStore.clear();
+      setUser(null);
+    });
+  }, []);
 
   useEffect(() => {
     if (!tokenStore.get()) return;

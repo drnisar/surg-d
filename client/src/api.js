@@ -21,6 +21,12 @@ export class ApiError extends Error {
   }
 }
 
+// Called when a request sent with a token gets a 401 (expired, invalid, or the account was deactivated).
+let onUnauthorized = () => {};
+export const setUnauthorizedHandler = (handler) => {
+  onUnauthorized = handler;
+};
+
 export async function api(path, { method = 'GET', body } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   const token = tokenStore.get();
@@ -29,6 +35,7 @@ export async function api(path, { method = 'GET', body } = {}) {
   const res = await fetch(`/api${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && token) onUnauthorized();
   if (!res.ok) throw new ApiError(res.status, data.error ?? res.statusText, data.details);
   return data;
 }

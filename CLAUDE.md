@@ -41,6 +41,7 @@ npm workspaces monorepo: `client/` (React 19, Vite 6, React Router 6, Tailwind C
 - **Auth:** `requireAuth` sets `req.user = { id, role, impersonatedBy }` from the JWT, and `requireRole(...)` gates a route.
   - Role is never sent by the client. It is derived from designation when an employee is saved, and only the admin account has no designation.
   - Passwords: users change their own on Profile (`POST /api/auth/password`, which checks the current one and is refused while impersonating). The admin resets anyone's from Staff → Edit. `PASSWORD_MIN_LENGTH` in `shared/` applies to both.
+  - Sign-ins last `JWT_EXPIRES_IN` (default `30d`; impersonation tokens 2 h). Any request that sent a token and gets a 401 signs the client out (`setUnauthorizedHandler` in `api.js`), and the signed-out routes redirect to `/login`.
   - On the client, `AuthProvider` (`auth.jsx`) holds the user.
   - `TaskBadgeProvider` (`taskBadge.jsx`) polls the unseen-task count. It is keyed by `user.id` in `App.jsx`, so switching user remounts every page.
 - **Client structure:** `pages/` own data loading and state; `components/` are presentational and take props and callbacks.

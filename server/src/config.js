@@ -2,7 +2,7 @@ export const config = {
   port: Number(process.env.PORT ?? 4000),
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   jwtSecret: process.env.JWT_SECRET ?? 'dev-only-secret',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '12h',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '30d',
   // Lets the admin act as another user for testing. On by default except in production.
   allowImpersonation: process.env.ALLOW_IMPERSONATION
     ? process.env.ALLOW_IMPERSONATION === 'true'

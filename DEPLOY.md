@@ -57,7 +57,7 @@ In Vercel, open **server → Settings → Environment Variables** and add these 
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | same as `.env.production` |
 | `DB_SSL` | `true` |
 | `JWT_SECRET` | a long random string, e.g. the output of `openssl rand -base64 48` |
-| `JWT_EXPIRES_IN` | `12h` |
+| `JWT_EXPIRES_IN` | `30d` (how long a sign-in lasts) |
 | `ALLOW_IMPERSONATION` | `false` (turns off Switch user) |
 | `BEDS_API_URL` | the hospital feed URL from `server/.env` |
 | `BEDS_CACHE_SECONDS` | `300` |
