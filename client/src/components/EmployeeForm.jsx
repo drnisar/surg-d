@@ -90,13 +90,13 @@ export default function EmployeeForm({ employee, designations = DESIGNATION_KEYS
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg md:max-w-2xl">
         <form onSubmit={onSubmit} className="grid gap-6">
           <DialogHeader>
             <DialogTitle>{isEdit ? 'Edit employee' : 'Add employee'}</DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {field(
               'employeeCode',
               'Employee code',

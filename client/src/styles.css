@@ -51,7 +51,6 @@ input[readonly]:not([data-slot]) { background: var(--app-bg); }
 table:not([data-slot]) { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 th:not([data-slot]), td:not([data-slot]) { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--app-border); white-space: nowrap; }
 th:not([data-slot]) { background: var(--app-bg); font-weight: 600; }
-.actions { display: flex; gap: 0.5rem; }
 
 .badge { padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--app-bg); }
 .role-admin { background: #fde2e1; color: #8a1c13; }
@@ -159,15 +158,7 @@ label.unavailable { color: var(--app-muted); }
 .duty-place .dot { background: currentColor; }
 
 /* Ward */
-.beds td { vertical-align: top; white-space: normal; }
-.beds td.mono { white-space: nowrap; width: 6rem; }
-.beds .bed-tasks { width: 55%; }
-.chip.mine { background: #eef8f3; color: var(--app-primary); }
 .chip .muted { font-size: 0.75rem; }
-.responsible { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin-top: 0.3rem; }
-.responsible .chip { font-size: 0.75rem; padding: 0.05rem 0.45rem; }
-.beds .tick { width: 2rem; }
-.beds tr.ticked td { background: #eef8f3; }
 .allocation-bar {
   position: sticky; bottom: 0.5rem; margin-top: 1rem; padding: 0.75rem 1rem;
   display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
@@ -276,5 +267,3 @@ label.unavailable { color: var(--app-muted); }
   .print-foot p { margin: 0 0 6mm; font-size: 7pt; }
   .print-signatures { display: flex; justify-content: space-between; gap: 10mm; }
 }
-.beds-source { margin: -0.5rem 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
-.small-btn { padding: 0.2rem 0.6rem; font-size: 0.8rem; }

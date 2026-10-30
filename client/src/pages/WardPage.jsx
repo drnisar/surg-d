@@ -6,7 +6,12 @@ import { useTaskBadge } from '../taskBadge.jsx';
 import { dayQuery, dayRange, formatDateTime } from '../dates.js';
 import ArchiveNotice from '../components/ArchiveNotice.jsx';
 import BedAllocationBar from '../components/BedAllocationBar.jsx';
+import BedList from '../components/BedList.jsx';
 import BedTaskDialog from '../components/BedTaskDialog.jsx';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // Tasks follow the patient; older tasks saved before patients were linked fall back to the bed code.
 const taskKey = (t) => t.patientMr ?? `bed:${t.bedCode}`;
@@ -140,47 +145,54 @@ export default function WardPage() {
     setAllocError('');
   };
 
+  const checkFilter = (id, label, checked, onChange) => (
+    <div className="flex items-center gap-2">
+      <Checkbox id={id} checked={checked} onCheckedChange={(v) => onChange(v === true)} />
+      <Label htmlFor={id} className="font-normal">
+        {label}
+      </Label>
+    </div>
+  );
+
   return (
     <>
-      <div className="toolbar">
-        <div>
-          <h2>Ward</h2>
-          <p className="muted subtitle">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="w-full sm:w-auto">
+          <h2 className="m-0 text-2xl font-semibold">Ward</h2>
+          <p className="m-0 text-sm text-muted-foreground">
             {beds ? `${list.length} occupied beds` : 'Loading beds…'} · {openTasks.length} open{' '}
             {openTasks.length === 1 ? 'task' : 'tasks'} today
             {hasBeds && ` · ${myCount} of my beds occupied`}
           </p>
         </div>
-        <span className="spacer" />
-        <input placeholder="Search bed, patient, MR, consultant" value={query} onChange={(e) => setQuery(e.target.value)} />
-        <label className="inline-check">
-          <input type="checkbox" checked={onlyWithTasks} onChange={(e) => setOnlyWithTasks(e.target.checked)} />
-          Only beds with open tasks
-        </label>
-        {hasBeds && (
-          <label className="inline-check">
-            <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} />
-            My beds
-          </label>
-        )}
+        <span className="hidden flex-1 sm:block" />
+        <Input
+          className="w-full sm:w-64"
+          placeholder="Search bed, patient, MR, consultant"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {checkFilter('only-with-tasks', 'Only beds with open tasks', onlyWithTasks, setOnlyWithTasks)}
+        {hasBeds && checkFilter('only-mine', 'My beds', onlyMine, setOnlyMine)}
         {canAllocate && (
-          <button
-            className={`btn ${allocating ? 'primary' : 'ghost'}`}
+          <Button
+            variant={allocating ? 'default' : 'outline'}
             onClick={() => (allocating ? stopAllocating() : setAllocating(true))}
           >
             {allocating ? 'Done' : 'Allocate beds'}
-          </button>
+          </Button>
         )}
+        {allocating && <div className="md:hidden">{checkFilter('tick-all', 'Tick all shown', allShownTicked, tickAllShown)}</div>}
       </div>
 
       {allocating && (
-        <p className="muted hint">
-          Tick beds (search narrows the list, the header box ticks all shown), pick doctors below, then add them to the beds
+        <p className="mt-0 mb-3 text-sm text-muted-foreground">
+          Tick beds (search narrows the list, "Tick all shown" ticks them all), pick doctors below, then add them to the beds
           or replace whoever covers them now.
         </p>
       )}
-      {error && <p className="error">{error}</p>}
-      {bedsError && <p className="error">{bedsError}</p>}
+      {error && <p className="mt-0 mb-3 text-sm text-destructive">{error}</p>}
+      {bedsError && <p className="mt-0 mb-3 text-sm text-destructive">{bedsError}</p>}
       {beds?.stale && (
         <p className="archive-notice">
           The hospital system isn't responding, so this is the bed list from {formatDateTime(beds.fetchedAt)}.
@@ -189,97 +201,27 @@ export default function WardPage() {
       <ArchiveNotice count={earlierCount} />
 
       {beds && (
-        <p className="muted small beds-source">
-          From the hospital system · updated {formatDateTime(beds.fetchedAt)}{' '}
-          <button className="btn ghost small-btn" onClick={() => loadBeds(true)} disabled={refreshing}>
+        <p className="mt-0 mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          From the hospital system · updated {formatDateTime(beds.fetchedAt)}
+          <Button variant="outline" size="xs" onClick={() => loadBeds(true)} disabled={refreshing}>
             {refreshing ? 'Refreshing… (can take ~10 s)' : 'Refresh'}
-          </button>
+          </Button>
         </p>
       )}
 
-      <div className="table-wrap">
-        <table className="beds">
-          <thead>
-            <tr>
-              {allocating && (
-                <th className="tick">
-                  <input type="checkbox" aria-label="Tick all shown beds" checked={allShownTicked} onChange={tickAllShown} />
-                </th>
-              )}
-              <th>Bed</th>
-              <th>Patient</th>
-              <th>Open tasks today</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((bed) => {
-              const tasks = tasksByKey.get(bedKey(bed)) ?? [];
-              const responsible = doctorsByBed.get(bed.code) ?? [];
-              return (
-                <tr key={bed.code} className={tickedBeds.has(bed.code) ? 'ticked' : ''}>
-                  {allocating && (
-                    <td className="tick">
-                      <input
-                        type="checkbox"
-                        aria-label={`Tick bed ${bed.code}`}
-                        checked={tickedBeds.has(bed.code)}
-                        onChange={() => toggle(tickedBeds, setTickedBeds, bed.code)}
-                      />
-                    </td>
-                  )}
-                  <td className="mono">
-                    <strong>{bed.code}</strong>
-                  </td>
-                  <td>
-                    {bed.patientName ?? <span className="muted">—</span>}
-                    <div className="muted small">
-                      {[bed.mrNumber, bed.consultantName, bed.unit].filter(Boolean).join(' · ')}
-                    </div>
-                    <div className="responsible small">
-                      <span className="muted">Responsible:</span>{' '}
-                      {responsible.length ? (
-                        responsible.map((d) => (
-                          <span key={d.id} className={`chip ${d.id === user.id ? 'mine' : ''}`}>
-                            {d.fullName}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="bed-tasks">
-                    {tasks.length ? (
-                      <div className="chips">
-                        {tasks.map((t) => (
-                          <span key={t.id} className={`chip ${t.assignedTo.id === user.id ? 'mine' : ''}`}>
-                            {t.description} <span className="muted">→ {t.assignedTo.fullName}</span>
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="muted">—</span>
-                    )}
-                  </td>
-                  <td className="actions">
-                    <button className="btn ghost" onClick={() => setSelected(bed)}>
-                      Tasks{tasks.length ? ` (${tasks.length})` : ''}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-            {!shown.length && (
-              <tr>
-                <td colSpan={allocating ? 5 : 4} className="muted center">
-                  {!beds && !bedsError ? 'Loading beds from the hospital system…' : 'No beds to show'}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <BedList
+        beds={shown}
+        emptyText={!beds && !bedsError ? 'Loading beds from the hospital system…' : 'No beds to show'}
+        userId={user.id}
+        tasksFor={(bed) => tasksByKey.get(bedKey(bed)) ?? []}
+        doctorsFor={(bed) => doctorsByBed.get(bed.code) ?? []}
+        onOpen={setSelected}
+        allocating={allocating}
+        isTicked={(bed) => tickedBeds.has(bed.code)}
+        onToggle={(bed) => toggle(tickedBeds, setTickedBeds, bed.code)}
+        allTicked={allShownTicked}
+        onTickAll={tickAllShown}
+      />
 
       {allocating && (
         <BedAllocationBar
