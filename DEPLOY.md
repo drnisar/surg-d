@@ -5,7 +5,7 @@ The app runs as two Vercel projects, both deploying the `main` branch of `drnisa
 | Project | Root Directory | Preset | URL |
 |---|---|---|---|
 | **server** | `server` | Express | https://server-five-lac-66.vercel.app |
-| **client** | `client` | Vite | https://client-three-kohl-90.vercel.app |
+| **client** | `client` | Vite | https://surg-d.vercel.app (also https://client-three-kohl-90.vercel.app) |
 
 - **server** runs the Express API from the default export of `server/src/app.js`. `server/vercel.json` runs it in Singapore (`sin1`), close to the database and the hospital feed.
 - **client** serves the built web app. `client/vercel.json` forwards every `/api/...` request to the server and sends every other path to `index.html`. The browser only ever talks to the client's address, so no CORS setup is needed. If the server's URL changes, update it in `client/vercel.json`.
@@ -68,8 +68,8 @@ Environment variables only take effect on the next deployment, so redeploy the s
 ## 4. Check
 
 - `https://server-five-lac-66.vercel.app/api/health` returns `{"ok":true}`.
-- `https://client-three-kohl-90.vercel.app/api/health` returns the same, which shows the client forwards requests to the server.
-- On the client, you can log in with the admin MR number `K0360000000001` and `ADMIN_PASSWORD`, and the Ward page lists beds. If beds don't load, see step 1.
+- `https://surg-d.vercel.app/api/health` returns the same, which shows the client forwards requests to the server.
+- On https://surg-d.vercel.app, you can log in with the admin MR number `K0360000000001` and `ADMIN_PASSWORD`, and the Ward page lists beds. If beds don't load, see step 1.
 
 ## Later changes
 
