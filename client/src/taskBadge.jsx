@@ -34,7 +34,10 @@ export const useTaskBadge = () => useContext(TaskBadgeContext);
 export function Badge({ count }) {
   if (!count) return null;
   return (
-    <span className="notify-badge" aria-label={`${count} new`}>
+    <span
+      className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[0.7rem] font-bold text-white"
+      aria-label={`${count} new`}
+    >
       {count > 99 ? '99+' : count}
     </span>
   );

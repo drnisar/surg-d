@@ -5,6 +5,9 @@ import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { Badge, useTaskBadge } from '../taskBadge.jsx';
 import ChangePasswordForm from '../components/ChangePasswordForm.jsx';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function SwitchUser() {
   const { user, impersonate } = useAuth();
@@ -44,38 +47,50 @@ function SwitchUser() {
   if (enabled === null) return null;
 
   return (
-    <section className="card">
-      <h3>Test as another user</h3>
-      {enabled ? (
-        <form className="switch-user" onSubmit={submit}>
-          <p className="muted small">
-            See the app exactly as a doctor, registrar, consultant or nurse sees it, without their password. Anything you
-            do is saved as that user. Use the banner at the top to return to your admin account.
-          </p>
-          <div className="task-input">
-            <select value={selected} onChange={(e) => setSelected(e.target.value)} required>
-              <option value="">Select a user…</option>
-              {groups.map((g) => (
-                <optgroup key={g.key} label={`${g.label} — ${ROLE_LABELS[g.role]}`}>
-                  {g.people.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.fullName} ({p.mrNumber})
-                    </option>
+    <Card>
+      <CardHeader>
+        <CardTitle>Test as another user</CardTitle>
+        <CardDescription>
+          {enabled
+            ? 'See the app exactly as a doctor, registrar, consultant or nurse sees it, without their password. Anything you do is saved as that user. Use the banner at the top to return to your admin account.'
+            : 'Switching user is disabled on this server.'}
+        </CardDescription>
+      </CardHeader>
+      {enabled && (
+        <CardContent>
+          <form className="grid gap-3" onSubmit={submit}>
+            <div className="flex gap-2">
+              <Select value={selected || undefined} onValueChange={setSelected}>
+                <SelectTrigger className="min-w-0 flex-1" aria-label="User to test as">
+                  <SelectValue placeholder="Select a user…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((g) => (
+                    <SelectGroup key={g.key}>
+                      <SelectLabel>
+                        {g.label} — {ROLE_LABELS[g.role]}
+                      </SelectLabel>
+                      {g.people.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.fullName} ({p.mrNumber})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
-                </optgroup>
-              ))}
-            </select>
-            <button className="btn primary" disabled={busy || !selected}>
-              {busy ? 'Switching…' : 'Switch'}
-            </button>
-          </div>
-          {!groups.length && <p className="muted small">No other active users yet. Add staff on the Staff page.</p>}
-          {error && <p className="error">{error}</p>}
-        </form>
-      ) : (
-        <p className="muted">Switching user is disabled on this server.</p>
+                </SelectContent>
+              </Select>
+              <Button type="submit" disabled={busy || !selected}>
+                {busy ? 'Switching…' : 'Switch'}
+              </Button>
+            </div>
+            {!groups.length && (
+              <p className="m-0 text-sm text-muted-foreground">No other active users yet. Add staff on the Staff page.</p>
+            )}
+            {error && <p className="m-0 text-sm text-destructive">{error}</p>}
+          </form>
+        </CardContent>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -93,59 +108,64 @@ export default function ProfilePage() {
   };
 
   const rows = [
-    ['MR number', <span className="mono">{user.mrNumber}</span>],
+    ['MR number', <span className="font-mono">{user.mrNumber}</span>],
     ['Designation', designationLabel(user.designation) || '—'],
     ['Role', ROLE_LABELS[user.role]],
     ['Email', user.email],
     ['Official email', user.officialEmail],
-    ['Phone', <span className="mono">{user.phone}</span>],
+    ['Phone', <span className="font-mono">{user.phone}</span>],
   ];
 
   return (
     <>
-      <div className="toolbar">
-        <div>
-          <h2 className="with-badge">
-            {user.fullName}
-            <Badge count={count} />
-          </h2>
-          <p className="muted subtitle">{ROLE_LABELS[user.role]}</p>
-        </div>
+      <div className="mb-4">
+        <h2 className="m-0 inline-flex items-center gap-2 text-2xl font-semibold">
+          {user.fullName}
+          <Badge count={count} />
+        </h2>
+        <p className="m-0 text-muted-foreground">{ROLE_LABELS[user.role]}</p>
       </div>
 
-      <div className="profile-grid">
-        <section className="card">
-          <h3>Details</h3>
-          <dl className="details">
-            {rows.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-        <section className="card">
-          <h3>Change password</h3>
-          {user.impersonatedBy ? (
-            <p className="muted">Return to your admin account to change passwords. Staff passwords are reset from the Staff page.</p>
-          ) : (
-            <div className="password-card">
-              {passwordChanged && <p className="done">Password changed.</p>}
-              <div>
-                <button
-                  className="btn ghost"
-                  onClick={() => {
-                    setPasswordChanged(false);
-                    setChangingPassword(true);
-                  }}
-                >
-                  Change password
-                </button>
-              </div>
-            </div>
+      <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="m-0 grid gap-3">
+              {rows.map(([label, value]) => (
+                <div key={label} className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-2">
+                  <dt className="text-sm text-muted-foreground">{label}</dt>
+                  <dd className="m-0 break-words">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Change password</CardTitle>
+            {user.impersonatedBy && (
+              <CardDescription>
+                Return to your admin account to change passwords. Staff passwords are reset from the Staff page.
+              </CardDescription>
+            )}
+          </CardHeader>
+          {!user.impersonatedBy && (
+            <CardContent className="grid justify-items-start gap-3">
+              {passwordChanged && <p className="m-0 text-sm text-green-700">Password changed.</p>}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPasswordChanged(false);
+                  setChangingPassword(true);
+                }}
+              >
+                Change password
+              </Button>
+            </CardContent>
           )}
-        </section>
+        </Card>
         {isRealAdmin && <SwitchUser />}
       </div>
 

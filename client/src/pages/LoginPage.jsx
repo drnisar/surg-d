@@ -5,7 +5,7 @@ export default function LoginPage() {
   const { login } = useAuth();
 
   return (
-    <div className="login">
+    <div className="grid min-h-screen place-items-center bg-muted p-4">
       <LoginForm onLogin={login} />
     </div>
   );

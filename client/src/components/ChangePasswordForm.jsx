@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { PASSWORD_MIN_LENGTH } from '@surg-d/shared';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // Modal. `onSubmit({ currentPassword, newPassword })` should throw on failure; field errors come from its `details`.
 // The parent closes the modal on success.
@@ -34,37 +38,43 @@ export default function ChangePasswordForm({ onSubmit, onClose }) {
   };
 
   const field = (key, label, autoComplete, autoFocus = false) => (
-    <label>
-      {label}
-      <input
+    <div className="grid gap-2">
+      <Label htmlFor={key}>{label}</Label>
+      <Input
+        id={key}
         type="password"
         value={form[key]}
         onChange={set(key)}
         autoComplete={autoComplete}
         autoFocus={autoFocus}
+        aria-invalid={Boolean(errors[key])}
         required
       />
-      {errors[key] && <span className="error">{errors[key]}</span>}
-    </label>
+      {errors[key] && <p className="m-0 text-sm text-destructive">{errors[key]}</p>}
+    </div>
   );
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <form className="card modal password-form" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <h2>Change password</h2>
-        {field('currentPassword', 'Current password', 'current-password', true)}
-        {field('newPassword', `New password (at least ${PASSWORD_MIN_LENGTH} characters)`, 'new-password')}
-        {field('confirm', 'Confirm new password', 'new-password')}
-        {error && <p className="error">{error}</p>}
-        <div className="modal-actions">
-          <button type="button" className="btn ghost" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="btn primary" disabled={busy}>
-            {busy ? 'Saving…' : 'Change password'}
-          </button>
-        </div>
-      </form>
-    </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <form className="grid gap-4" onSubmit={submit}>
+          <DialogHeader>
+            <DialogTitle>Change password</DialogTitle>
+          </DialogHeader>
+          {field('currentPassword', 'Current password', 'current-password', true)}
+          {field('newPassword', `New password (at least ${PASSWORD_MIN_LENGTH} characters)`, 'new-password')}
+          {field('confirm', 'Confirm new password', 'new-password')}
+          {error && <p className="m-0 text-sm text-destructive">{error}</p>}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={busy}>
+              {busy ? 'Saving…' : 'Change password'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
