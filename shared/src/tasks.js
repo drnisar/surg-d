@@ -34,11 +34,11 @@ export const TASK_TEMPLATES = [
 
 // WhatsApp message offered after assigning tasks. Deliberately no patient name or MR number:
 // it ends up in personal chats, so it names only the bed and links back to the app.
-export function taskWhatsappMessage({ bedCode, descriptions, assignedBy, link }) {
+export function taskWhatsappMessage({ bedCode, descriptions, assignedBy, link, heading = 'Surgical D Ward' }) {
   const lines =
     descriptions.length === 1
-      ? [`Surgical D Ward — new task for bed ${bedCode}: ${descriptions[0]}`]
-      : [`Surgical D Ward — new tasks for bed ${bedCode}:`, ...descriptions.map((d) => `• ${d}`)];
+      ? [`${heading} — new task for bed ${bedCode}: ${descriptions[0]}`]
+      : [`${heading} — new tasks for bed ${bedCode}:`, ...descriptions.map((d) => `• ${d}`)];
   if (assignedBy) lines.push(`Assigned by ${assignedBy}.`);
   if (link) lines.push(`Open My tasks: ${link}`);
   return lines.join('\n');

@@ -1,6 +1,7 @@
 import { useAuth } from './auth.jsx';
 import { SignedInRoutes, SignedOutRoutes } from './AppRoutes.jsx';
 import Layout from './Layout.jsx';
+import { SettingsProvider } from './settings.jsx';
 import { TaskBadgeProvider } from './taskBadge.jsx';
 
 export default function App() {
@@ -9,10 +10,12 @@ export default function App() {
   if (!user) return <SignedOutRoutes />;
   // Keyed by user so switching user remounts every page with fresh state.
   return (
-    <TaskBadgeProvider key={user.id}>
-      <Layout>
-        <SignedInRoutes />
-      </Layout>
-    </TaskBadgeProvider>
+    <SettingsProvider key={user.id}>
+      <TaskBadgeProvider>
+        <Layout>
+          <SignedInRoutes />
+        </Layout>
+      </TaskBadgeProvider>
+    </SettingsProvider>
   );
 }

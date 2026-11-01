@@ -4,3 +4,4 @@ export * from './mrNumber.js';
 export * from './phone.js';
 export * from './roster.js';
 export * from './tasks.js';
+export * from './settings.js';

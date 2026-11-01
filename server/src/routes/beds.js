@@ -4,6 +4,7 @@ import { pool } from '../db.js';
 import { toAllocationDto, validateBedAllocation } from '../bedAllocations.js';
 import { asyncHandler, HttpError } from '../errors.js';
 import { getBeds } from '../hospitalBeds.js';
+import { getSettings } from '../settings.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 
 export const bedsRouter = Router();
@@ -41,6 +42,7 @@ bedsRouter.put(
   '/allocations',
   requireRole(...BED_ALLOCATION_EDITOR_ROLES),
   asyncHandler(async (req, res) => {
+    if (!(await getSettings()).bedAllocation.enabled) throw new HttpError(403, 'Bed allocation is turned off');
     const { data, errors } = validateBedAllocation(req.body ?? {});
     if (errors) throw new HttpError(422, 'Validation failed', errors);
     const { bedCodes, employeeIds, mode } = data;

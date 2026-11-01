@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BED_ALLOCATION_EDITOR_ROLES, TASK_ASSIGNEE_ROLES } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
+import { useSettings } from '../settings.jsx';
 import { useTaskBadge } from '../taskBadge.jsx';
 import { dayQuery, dayRange, formatDateTime } from '../dates.js';
 import ArchiveNotice from '../components/ArchiveNotice.jsx';
@@ -19,7 +20,9 @@ const bedKey = (b) => b.mrNumber ?? `bed:${b.code}`;
 
 export default function WardPage() {
   const { user } = useAuth();
-  const canAllocate = BED_ALLOCATION_EDITOR_ROLES.includes(user.role);
+  const { settings } = useSettings();
+  const allocationOn = settings.bedAllocation.enabled;
+  const canAllocate = allocationOn && BED_ALLOCATION_EDITOR_ROLES.includes(user.role);
   const { refresh: refreshBadge } = useTaskBadge();
   const [beds, setBeds] = useState(null); // { beds, fetchedAt, stale } from the hospital system
   const [bedsError, setBedsError] = useState('');
@@ -90,7 +93,7 @@ export default function WardPage() {
   }, [allocations]);
 
   const isMine = (b) => doctorsByBed.get(b.code)?.some((d) => d.id === user.id) ?? false;
-  const hasBeds = allocations.some((a) => a.doctor.id === user.id);
+  const hasBeds = allocationOn && allocations.some((a) => a.doctor.id === user.id);
 
   const list = beds?.beds ?? [];
   const myCount = list.filter(isMine).length;
@@ -98,7 +101,7 @@ export default function WardPage() {
   const shown = list.filter(
     (b) =>
       (!onlyWithTasks || tasksByKey.has(bedKey(b))) &&
-      (!onlyMine || isMine(b)) &&
+      (!onlyMine || !hasBeds || isMine(b)) &&
       (!q || [b.code, b.patientName, b.mrNumber, b.consultantName].some((v) => v?.toLowerCase().includes(q)))
   );
 
@@ -215,15 +218,16 @@ export default function WardPage() {
         userId={user.id}
         tasksFor={(bed) => tasksByKey.get(bedKey(bed)) ?? []}
         doctorsFor={(bed) => doctorsByBed.get(bed.code) ?? []}
+        showResponsible={allocationOn}
         onOpen={setSelected}
-        allocating={allocating}
+        allocating={canAllocate && allocating}
         isTicked={(bed) => tickedBeds.has(bed.code)}
         onToggle={(bed) => toggle(tickedBeds, setTickedBeds, bed.code)}
         allTicked={allShownTicked}
         onTickAll={tickAllShown}
       />
 
-      {allocating && (
+      {canAllocate && allocating && (
         <BedAllocationBar
           doctors={doctors}
           bedCount={tickedBeds.size}

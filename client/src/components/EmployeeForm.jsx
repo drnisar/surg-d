@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  DEFAULT_COUNTRY_CODE,
   DESIGNATIONS,
   DESIGNATION_KEYS,
   ROLE_LABELS,
@@ -9,6 +8,7 @@ import {
   roleForDesignation,
 } from '@surg-d/shared';
 import { api } from '../api.js';
+import { useSettings } from '../settings.jsx';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,12 +27,13 @@ function previewMr(code) {
 // `designations` limits the designation choices, e.g. to the juniors a registrar may add.
 export default function EmployeeForm({ employee, designations = DESIGNATION_KEYS, onClose, onSaved }) {
   const isEdit = Boolean(employee);
+  const { settings } = useSettings();
   const [form, setForm] = useState({
     employeeCode: employee ? employeeCodeOf(employee.mrNumber) : '',
     fullName: employee?.fullName ?? '',
     email: employee?.email ?? '',
     officialEmail: employee?.officialEmail ?? '',
-    countryCode: employee?.countryCode ?? DEFAULT_COUNTRY_CODE,
+    countryCode: employee?.countryCode ?? settings.phone.defaultCountryCode,
     phoneNumber: employee?.phoneNumber ?? '',
     designation: employee?.designation ?? '',
     password: '',

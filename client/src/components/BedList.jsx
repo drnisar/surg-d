@@ -50,6 +50,7 @@ const patientLine = (bed) => [bed.mrNumber, bed.consultantName, bed.unit].filter
 
 // Ward beds: cards below `md`, a table from `md` up.
 // `tasksFor(bed)` / `doctorsFor(bed)` give today's open tasks and the responsible doctors.
+// `showResponsible` is off while the admin has turned bed allocation off.
 // While `allocating`, each bed gets a tick box (`isTicked`, `onToggle`) and the table header ticks all shown (`onTickAll`).
 export default function BedList({
   beds,
@@ -57,6 +58,7 @@ export default function BedList({
   userId,
   tasksFor,
   doctorsFor,
+  showResponsible = true,
   onOpen,
   allocating,
   isTicked,
@@ -93,7 +95,7 @@ export default function BedList({
                 <div className="font-medium">{bed.patientName ?? '—'}</div>
                 <div className="text-xs text-muted-foreground">{patientLine(bed)}</div>
               </div>
-              <Responsible doctors={doctorsFor(bed)} userId={userId} />
+              {showResponsible && <Responsible doctors={doctorsFor(bed)} userId={userId} />}
               <TaskChips tasks={tasks} userId={userId} empty="No open tasks today" />
             </li>
           );
@@ -127,7 +129,7 @@ export default function BedList({
                     <div className="grid gap-1">
                       <span>{bed.patientName ?? '—'}</span>
                       <span className="text-xs text-muted-foreground">{patientLine(bed)}</span>
-                      <Responsible doctors={doctorsFor(bed)} userId={userId} />
+                      {showResponsible && <Responsible doctors={doctorsFor(bed)} userId={userId} />}
                     </div>
                   </TableCell>
                   <TableCell className="align-top whitespace-normal">

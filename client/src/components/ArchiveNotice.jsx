@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useSettings } from '../settings.jsx';
 
 // "N undone tasks from earlier days" with a link to the Archive, optionally filtered ({ patient } or { bed }).
+// Hidden while the admin has turned the Archive off.
 export default function ArchiveNotice({ count, mine = 0, filter = {} }) {
-  if (!count) return null;
+  const { settings } = useSettings();
+  if (!count || !settings.archive.enabled) return null;
   const query = new URLSearchParams(filter).toString();
 
   return (

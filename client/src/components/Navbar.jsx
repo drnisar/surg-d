@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
-import { ROLE_LABELS } from '@surg-d/shared';
+import { LogOut, Settings } from 'lucide-react';
+import { ROLE_LABELS, ROLES } from '@surg-d/shared';
+import { useSettings } from '../settings.jsx';
 import { Badge } from '../taskBadge.jsx';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -21,16 +22,24 @@ const LINKS = [
 ];
 
 export default function Navbar({ user, taskCount, onLogout }) {
+  const { settings } = useSettings();
+  const links = LINKS.filter(([to]) => to !== '/archive' || settings.archive.enabled);
   return (
     <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-background px-4 py-3 print:hidden">
       <strong className="font-semibold">Surgical D Ward</strong>
       <nav className="flex flex-wrap gap-1">
-        {LINKS.map(([to, label]) => (
+        {links.map(([to, label]) => (
           <NavLink key={to} to={to} end={to === '/'} className={linkClass}>
             {label}
             {to === '/tasks' && <Badge count={taskCount} />}
           </NavLink>
         ))}
+        {user.role === ROLES.ADMIN && (
+          <NavLink to="/setup" className={linkClass}>
+            <Settings className="size-4" />
+            Setup
+          </NavLink>
+        )}
       </nav>
       <span className="flex-1" />
       <NavLink to="/profile" className={linkClass} title={taskCount ? `${taskCount} new task(s)` : 'My profile'}>

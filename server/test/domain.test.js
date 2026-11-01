@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addableDesignations, buildMrNumber, canEditEmployee, taskWhatsappMessage, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
+import { addableDesignations, buildMrNumber, canEditEmployee, taskWhatsappMessage, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl, withDefaults } from '@surg-d/shared';
+import { validateSettings } from '../src/settings.js';
 import { validateEmployee, validatePasswordChange } from '../src/employees.js';
 
 test('builds MR number from employee code', () => {
@@ -120,4 +121,28 @@ test('taskWhatsappMessage: one line for one task, bullets for several, no patien
   assert.equal(one, 'Surgical D Ward — new task for bed SUR-D-04(M): Change dressing\nAssigned by Dr A.\nOpen My tasks: https://x/tasks');
   const many = taskWhatsappMessage({ bedCode: 'PR-A-10', descriptions: ['Remove drain', 'Pass NG tube'] });
   assert.equal(many, 'Surgical D Ward — new tasks for bed PR-A-10:\n• Remove drain\n• Pass NG tube');
+});
+
+test('settings fall back to defaults', () => {
+  const s = withDefaults({ whatsapp: { enabled: false }, archive: { enabled: false } });
+  assert.equal(s.whatsapp.enabled, false);
+  assert.equal(s.whatsapp.heading, 'Surgical D Ward');
+  assert.equal(s.archive.enabled, false);
+  assert.equal(s.bedAllocation.enabled, true);
+  assert.equal(withDefaults(null).phone.defaultCountryCode, '+92');
+});
+
+test('validates settings', () => {
+  const ok = validateSettings({ ...withDefaults(), whatsapp: { ...withDefaults().whatsapp, heading: '  Surg  D ' }, phone: { defaultCountryCode: '44' } });
+  assert.equal(ok.data.whatsapp.heading, 'Surg D');
+  assert.equal(ok.data.phone.defaultCountryCode, '+44');
+  const bad = validateSettings({ ...withDefaults(), whatsapp: { ...withDefaults().whatsapp, heading: ' ', enabled: 'yes' }, phone: { defaultCountryCode: '+12345' } });
+  assert.ok(bad.errors['whatsapp.heading']);
+  assert.ok(bad.errors['whatsapp.enabled']);
+  assert.ok(bad.errors['phone.defaultCountryCode']);
+  assert.ok(validateSettings({}).errors['archive.enabled']);
+});
+
+test('WhatsApp message uses a custom heading', () => {
+  assert.equal(taskWhatsappMessage({ bedCode: 'B1', descriptions: ['X'], heading: 'Surg D' }), 'Surg D — new task for bed B1: X');
 });

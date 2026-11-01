@@ -3,22 +3,26 @@ import { DESIGNATIONS, TASK_MAX_LENGTH, TASK_TEMPLATES, taskWhatsappMessage, wha
 import { MessageCircle } from 'lucide-react';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
+import { useSettings } from '../settings.jsx';
 import { dayQuery, dayRange } from '../dates.js';
 import ArchiveNotice from './ArchiveNotice.jsx';
 import TaskList from './TaskList.jsx';
 import { Button } from '@/components/ui/button';
 
 // Shown after assigning: offers to WhatsApp the doctor a pre-filled message (bed and tasks only, no patient details).
+// The admin can turn the offer off, and choose its heading and lines, on the Setup page.
 function AssignedNotice({ doctor, descriptions, bedCode, me }) {
+  const { whatsapp } = useSettings().settings;
   if (!doctor) return null;
   const isMe = doctor.id === me.id;
   const message = taskWhatsappMessage({
     bedCode,
     descriptions,
-    assignedBy: me.fullName,
-    link: `${window.location.origin}/tasks`,
+    heading: whatsapp.heading,
+    assignedBy: whatsapp.includeAssignedBy ? me.fullName : undefined,
+    link: whatsapp.includeLink ? `${window.location.origin}/tasks` : undefined,
   });
-  const url = !isMe && whatsappUrl(doctor.phone, message);
+  const url = whatsapp.enabled && !isMe && whatsappUrl(doctor.phone, message);
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
       <span className="flex-1">
