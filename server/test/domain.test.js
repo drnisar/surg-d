@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addableDesignations, buildMrNumber, canEditEmployee, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
+import { addableDesignations, buildMrNumber, canEditEmployee, taskWhatsappMessage, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl } from '@surg-d/shared';
 import { validateEmployee, validatePasswordChange } from '../src/employees.js';
 
 test('builds MR number from employee code', () => {
@@ -107,4 +107,17 @@ test('canEditEmployee: an ER edits only TMOs and HOs, the admin anyone', () => {
   assert.equal(canEditEmployee(er, { designation: null }), false);
   assert.equal(canEditEmployee({ role: 'doctor', designation: 'house_officer' }, { designation: 'house_officer' }), false);
   assert.equal(canEditEmployee({ role: 'admin', designation: null }, { designation: 'professor' }), true);
+});
+
+test('whatsappUrl: pre-fills text when given', () => {
+  assert.equal(whatsappUrl('+923001234567'), 'https://wa.me/923001234567');
+  assert.equal(whatsappUrl('+923001234567', 'a b'), 'https://wa.me/923001234567?text=a%20b');
+  assert.equal(whatsappUrl('', 'x'), null);
+});
+
+test('taskWhatsappMessage: one line for one task, bullets for several, no patient details', () => {
+  const one = taskWhatsappMessage({ bedCode: 'SUR-D-04(M)', descriptions: ['Change dressing'], assignedBy: 'Dr A', link: 'https://x/tasks' });
+  assert.equal(one, 'Surgical D Ward — new task for bed SUR-D-04(M): Change dressing\nAssigned by Dr A.\nOpen My tasks: https://x/tasks');
+  const many = taskWhatsappMessage({ bedCode: 'PR-A-10', descriptions: ['Remove drain', 'Pass NG tube'] });
+  assert.equal(many, 'Surgical D Ward — new tasks for bed PR-A-10:\n• Remove drain\n• Pass NG tube');
 });

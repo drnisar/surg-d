@@ -1,13 +1,46 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DESIGNATIONS, TASK_MAX_LENGTH, TASK_TEMPLATES } from '@surg-d/shared';
+import { DESIGNATIONS, TASK_MAX_LENGTH, TASK_TEMPLATES, taskWhatsappMessage, whatsappUrl } from '@surg-d/shared';
+import { MessageCircle } from 'lucide-react';
 import { api } from '../api.js';
+import { useAuth } from '../auth.jsx';
 import { dayQuery, dayRange } from '../dates.js';
 import ArchiveNotice from './ArchiveNotice.jsx';
 import TaskList from './TaskList.jsx';
+import { Button } from '@/components/ui/button';
+
+// Shown after assigning: offers to WhatsApp the doctor a pre-filled message (bed and tasks only, no patient details).
+function AssignedNotice({ doctor, descriptions, bedCode, me }) {
+  if (!doctor) return null;
+  const isMe = doctor.id === me.id;
+  const message = taskWhatsappMessage({
+    bedCode,
+    descriptions,
+    assignedBy: me.fullName,
+    link: `${window.location.origin}/tasks`,
+  });
+  const url = !isMe && whatsappUrl(doctor.phone, message);
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+      <span className="flex-1">
+        {descriptions.length === 1 ? 'Task' : `${descriptions.length} tasks`} assigned to {isMe ? 'you' : doctor.fullName}.
+      </span>
+      {url && (
+        <Button asChild size="sm" className="bg-[#25D366] text-white no-underline hover:bg-[#1ebe5b]">
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <MessageCircle />
+            Send on WhatsApp
+          </a>
+        </Button>
+      )}
+    </div>
+  );
+}
 
 // Dialog for one bed: assign one or more tasks (typed or picked from the predefined list) to a doctor,
 // and see the bed's open and completed tasks for today. Earlier undone tasks are linked to the Archive.
 export default function BedTaskDialog({ bed, doctors, onClose, onChanged }) {
+  const { user } = useAuth();
+  const [justAssigned, setJustAssigned] = useState(null); // { doctor, descriptions } for the WhatsApp offer
   const [open, setOpen] = useState([]);
   const [completed, setCompleted] = useState([]);
   const [earlierCount, setEarlierCount] = useState(0);
@@ -62,8 +95,10 @@ export default function BedTaskDialog({ bed, doctors, onClose, onChanged }) {
     setBusy(true);
     setErrors({});
     setError('');
+    setJustAssigned(null);
     try {
       await api('/tasks', { method: 'POST', body: { bedCode: bed.code, descriptions: pending, assignedTo } });
+      setJustAssigned({ doctor: doctors.find((d) => d.id === Number(assignedTo)), descriptions: pending });
       setItems([]);
       setDraft('');
       await load();
@@ -174,6 +209,7 @@ export default function BedTaskDialog({ bed, doctors, onClose, onChanged }) {
             {errors.assignedTo && <span className="error">{errors.assignedTo}</span>}
           </label>
           {error && <p className="error">{error}</p>}
+          {justAssigned && <AssignedNotice {...justAssigned} bedCode={bed.code} me={user} />}
           <div className="modal-actions">
             <button type="button" className="btn ghost" onClick={onClose}>
               Close

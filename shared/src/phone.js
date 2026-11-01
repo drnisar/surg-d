@@ -15,7 +15,9 @@ export function normalizePhone(countryCode, phoneNumber) {
 }
 
 // WhatsApp click-to-chat link for a stored full number ('+923001234567' -> 'https://wa.me/923001234567').
-export function whatsappUrl(phone) {
+// `text`, if given, is pre-filled in the chat; the sender still presses Send.
+export function whatsappUrl(phone, text) {
   const digits = String(phone ?? '').replace(/\D/g, '');
-  return digits ? `https://wa.me/${digits}` : null;
+  if (!digits) return null;
+  return text ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : `https://wa.me/${digits}`;
 }
