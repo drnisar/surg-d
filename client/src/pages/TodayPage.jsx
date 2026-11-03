@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LOCATIONS, ROSTER_ELIGIBLE_ROLES, SHIFTS } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
+import { useTaskBadge } from '../taskBadge.jsx';
 import DayToolbar from '../components/DayToolbar.jsx';
 import MyDutiesList from '../components/MyDutiesList.jsx';
 import ShiftDutyCards from '../components/ShiftDutyCards.jsx';
-import { today } from '../dates.js';
+import TaskList from '../components/TaskList.jsx';
+import { dayQuery, today } from '../dates.js';
 
 const MY_DUTY_DAYS = 14;
 
@@ -15,6 +17,8 @@ export default function TodayPage() {
   const [date, setDate] = useState(today);
   const [assignments, setAssignments] = useState(null);
   const [myUpcoming, setMyUpcoming] = useState(null);
+  const [tasks, setTasks] = useState(null); // today's open tasks: { mine, ward }
+  const { refresh: refreshBadge } = useTaskBadge();
   const [error, setError] = useState('');
   const rostered = ROSTER_ELIGIBLE_ROLES.includes(user.role);
   const todayDate = today();
@@ -37,6 +41,31 @@ export default function TodayPage() {
       .then((data) => setMyUpcoming(data.assignments))
       .catch((err) => setError(err.message));
   }, [rostered, todayDate]);
+
+  // Tasks are always today's, whichever day the duty cards show. Visiting here doesn't mark them seen.
+  const loadTasks = useCallback(async () => {
+    const todayOnly = dayQuery();
+    try {
+      const [mine, ward] = await Promise.all([api(`/tasks?scope=mine&${todayOnly}`), api(`/tasks?${todayOnly}`)]);
+      setTasks({ mine, ward });
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
+
+  const complete = async (task) => {
+    try {
+      await api(`/tasks/${task.id}/complete`, { method: 'POST' });
+    } catch (err) {
+      setError(err.message);
+    }
+    loadTasks();
+    refreshBadge();
+  };
 
   const myDuties = (assignments ?? []).filter((a) => a.employee.id === user.id);
 
@@ -71,8 +100,25 @@ export default function TodayPage() {
         <ShiftDutyCards assignments={assignments ?? []} highlightId={user.id} />
       )}
 
+      {tasks && (
+        <div className="task-columns mt-4">
+          <section className="card">
+            <h3>
+              Assigned to me today <span className="count">{tasks.mine.length}</span>
+            </h3>
+            <TaskList tasks={tasks.mine} onComplete={complete} highlightId={user.id} emptyText="Nothing assigned to you today." />
+          </section>
+          <section className="card">
+            <h3>
+              Whole ward today <span className="count">{tasks.ward.length}</span>
+            </h3>
+            <TaskList tasks={tasks.ward} onComplete={complete} highlightId={user.id} emptyText="No open tasks on the ward today." />
+          </section>
+        </div>
+      )}
+
       <p className="muted small footer-link">
-        <Link to="/roster">Open the full duty roster →</Link>
+        <Link to="/roster">Open the full duty roster →</Link> · <Link to="/tasks">Open My tasks →</Link>
       </p>
     </>
   );
