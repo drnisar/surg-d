@@ -12,14 +12,14 @@ export default function Layout({ children }) {
     <>
       {user.impersonatedBy && (
         <div
-          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 print:hidden"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100 print:hidden"
           role="status"
         >
           <span>
             Testing as <strong>{user.fullName}</strong> ({ROLE_LABELS[user.role]}). Signed in as{' '}
             {user.impersonatedBy.fullName ?? 'admin'}.
           </span>
-          <Button size="sm" className="bg-amber-900 text-white hover:bg-amber-900/90" onClick={stopImpersonating}>
+          <Button size="sm" className="bg-amber-900 text-white hover:bg-amber-900/90 dark:bg-amber-200 dark:text-amber-950 dark:hover:bg-amber-200/90" onClick={stopImpersonating}>
             Return to admin
           </Button>
         </div>

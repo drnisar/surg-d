@@ -13,6 +13,35 @@
   background: var(--app-bg);
 }
 
+/* Dark mode (`.dark` on <html>, set by theme.js) for the legacy screens */
+.dark {
+  --app-bg: #0a0a0a;
+  --app-surface: #171717;
+  --app-text: #fafafa;
+  --app-muted: #a1a1a1;
+  --app-border: #2e2e2e;
+  --app-primary: #2f9e78;
+  --app-primary-text: #ffffff;
+  --app-danger: #f06a5c;
+  color-scheme: dark;
+}
+.dark .role-admin { background: #4a1a16; color: #ffc9c4; }
+.dark .role-consultant { background: #1c2a52; color: #c6d4ff; }
+.dark .role-manager { background: #4a3300; color: #ffe2a8; }
+.dark :is(.role-doctor, .desig-trainee_medical_officer) { background: #0f3b2b; color: #b5ecd2; }
+.dark :is(.role-nurse, .desig-nurse) { background: #35214d; color: #e3cdff; }
+.dark .desig-professor { background: #1c2a5c; color: #c3d0ff; }
+.dark .desig-associate_professor { background: #172e57; color: #c3dbff; }
+.dark .desig-assistant_professor { background: #0d3445; color: #b8e6f7; }
+.dark .desig-experiential_registrar { background: #4a2600; color: #ffd2ad; }
+.dark .desig-trainee_registrar { background: #423400; color: #ffeaa0; }
+.dark .desig-house_officer { background: #2b3a0f; color: #dcefb3; }
+.dark .roster tr.weekend td { background: #121212; }
+.dark :is(.roster tr.today td, .duty-place li.me, .duty-row.selected) { background: #0f2a20; }
+.dark .my-duty { background: #0f2a20; border-color: #1f5a43; color: #8fdcbc; }
+.dark .task.new { background: #2a1513; }
+.dark .archive-notice { background: #3a2a00; border-color: #6b4f0a; color: #ffe2a8; }
+
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--app-bg); color: var(--app-text); }
 h1, h2 { margin: 0 0 0.5rem; font-weight: 700; }

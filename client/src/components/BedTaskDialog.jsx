@@ -24,7 +24,7 @@ function AssignedNotice({ doctor, descriptions, bedCode, me }) {
   });
   const url = whatsapp.enabled && !isMe && whatsappUrl(doctor.phone, message);
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+    <div className="flex flex-wrap items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
       <span className="flex-1">
         {descriptions.length === 1 ? 'Task' : `${descriptions.length} tasks`} assigned to {isMe ? 'you' : doctor.fullName}.
       </span>

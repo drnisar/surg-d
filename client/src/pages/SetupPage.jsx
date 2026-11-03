@@ -164,7 +164,7 @@ export default function SetupPage() {
 
       {error && <p className="m-0 text-sm text-destructive">{error}</p>}
       <div className="flex items-center justify-end gap-3">
-        {saved && <span className="text-sm text-emerald-700">Saved</span>}
+        {saved && <span className="text-sm text-emerald-700 dark:text-emerald-400">Saved</span>}
         <Button type="submit" disabled={busy}>
           {busy ? 'Saving…' : 'Save'}
         </Button>

@@ -8,7 +8,7 @@ function Chip({ mine, children }) {
     <span
       className={cn(
         'inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-xs',
-        mine ? 'bg-emerald-50 text-emerald-800' : 'bg-muted text-foreground'
+        mine ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-muted text-foreground'
       )}
     >
       {children}
@@ -83,7 +83,7 @@ export default function BedList({
           return (
             <li
               key={bed.code}
-              className={cn('grid gap-2 rounded-md border bg-card p-4 text-sm', allocating && isTicked(bed) && 'bg-emerald-50')}
+              className={cn('grid gap-2 rounded-md border bg-card p-4 text-sm', allocating && isTicked(bed) && 'bg-emerald-50 dark:bg-emerald-950')}
             >
               <div className="flex items-center gap-3">
                 {allocating && tick(bed)}
@@ -122,7 +122,7 @@ export default function BedList({
             {beds.map((bed) => {
               const tasks = tasksFor(bed);
               return (
-                <TableRow key={bed.code} className={cn(allocating && isTicked(bed) && 'bg-emerald-50 hover:bg-emerald-50')}>
+                <TableRow key={bed.code} className={cn(allocating && isTicked(bed) && 'bg-emerald-50 hover:bg-emerald-50 dark:bg-emerald-950 dark:hover:bg-emerald-950')}>
                   {allocating && <TableCell className="align-top">{tick(bed)}</TableCell>}
                   <TableCell className="w-28 align-top font-mono font-semibold">{bed.code}</TableCell>
                   <TableCell className="whitespace-normal">

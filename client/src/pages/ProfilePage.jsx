@@ -153,7 +153,7 @@ export default function ProfilePage() {
           </CardHeader>
           {!user.impersonatedBy && (
             <CardContent className="grid justify-items-start gap-3">
-              {passwordChanged && <p className="m-0 text-sm text-green-700">Password changed.</p>}
+              {passwordChanged && <p className="m-0 text-sm text-green-700 dark:text-green-400">Password changed.</p>}
               <Button
                 variant="outline"
                 onClick={() => {
