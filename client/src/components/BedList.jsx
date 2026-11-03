@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -43,6 +44,21 @@ function TaskChips({ tasks, userId, empty }) {
         </Chip>
       ))}
     </div>
+  );
+}
+
+// The patient's name opens their HMIS notes when the bed has an MR number.
+function PatientName({ bed }) {
+  if (!bed.mrNumber) return bed.patientName ?? '—';
+  return (
+    <Link
+      to={`/patients/${encodeURIComponent(bed.mrNumber)}`}
+      state={{ bed }}
+      className="no-underline underline-offset-4 hover:underline"
+      title="Open notes from HMIS"
+    >
+      {bed.patientName ?? bed.mrNumber}
+    </Link>
   );
 }
 
@@ -92,7 +108,9 @@ export default function BedList({
                 {tasksButton(bed, tasks.length)}
               </div>
               <div>
-                <div className="font-medium">{bed.patientName ?? '—'}</div>
+                <div className="font-medium">
+                  <PatientName bed={bed} />
+                </div>
                 <div className="text-xs text-muted-foreground">{patientLine(bed)}</div>
               </div>
               {showResponsible && <Responsible doctors={doctorsFor(bed)} userId={userId} />}
@@ -127,7 +145,9 @@ export default function BedList({
                   <TableCell className="w-28 align-top font-mono font-semibold">{bed.code}</TableCell>
                   <TableCell className="whitespace-normal">
                     <div className="grid gap-1">
-                      <span>{bed.patientName ?? '—'}</span>
+                      <span className="font-medium">
+                        <PatientName bed={bed} />
+                      </span>
                       <span className="text-xs text-muted-foreground">{patientLine(bed)}</span>
                       {showResponsible && <Responsible doctors={doctorsFor(bed)} userId={userId} />}
                     </div>

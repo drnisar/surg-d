@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normaliseBeds } from '../src/hospitalBeds.js';
+import { parseHmisDate, toNotesDto } from '../src/hospitalNotes.js';
 import { createdRangeSql, parseCreatedRange, validateTask } from '../src/tasks.js';
 
 test('parseCreatedRange reads epoch-ms bounds and builds SQL', () => {
@@ -88,4 +89,28 @@ test('validateTask rejects bad input', () => {
   const { errors } = validateTask({ bedCode: 'bad bed!', description: ' ', assignedTo: 'x' });
   assert.deepEqual(Object.keys(errors).sort(), ['assignedTo', 'bedCode', 'description']);
   assert.ok(validateTask({ bedCode: 'SDW-01', description: 'x'.repeat(501), assignedTo: 1 }).errors.description);
+});
+
+test('parseHmisDate reads month-first HMIS dates as local wall-clock time', () => {
+  assert.equal(parseHmisDate('11/2/2026 9:05:00 AM'), '2026-11-02T09:05');
+  assert.equal(parseHmisDate('10/28/2026 3:40:12 PM'), '2026-10-28T15:40');
+  assert.equal(parseHmisDate('1/5/2026 12:15:00 AM'), '2026-01-05T00:15');
+  assert.equal(parseHmisDate('1/5/2026 12:15:00 PM'), '2026-01-05T12:15');
+  assert.equal(parseHmisDate(''), null);
+  assert.equal(parseHmisDate('soon'), null);
+});
+
+test('toNotesDto maps HMIS notes, newest first', () => {
+  const row = (date, notes) => ({
+    patienT_MRNO: 'K0300006069690 ', patienT_NAME: 'Test Patient', age: '40 Year(s)', seX_DESC: 'Male',
+    noteS_DATE: date, signeD_DATE: '', writeR_USER_NAME: 'Dr A', cliniC_DESC: '', cliniC_SPECIALTY_DESC: '',
+    patienT_LOCATION_DESC: 'SUR-D', notes,
+  });
+  const dto = toNotesDto([row('10/28/2026 3:40:00 PM', 'old'), row('11/2/2026 9:05:00 AM', 'line 1\r\nline 2')]);
+  assert.deepEqual(dto.patient, { mrNumber: 'K0300006069690', name: 'Test Patient', age: '40 Year(s)', sex: 'Male' });
+  assert.deepEqual(dto.notes.map((n) => n.writtenAt), ['2026-11-02T09:05', '2026-10-28T15:40']);
+  assert.equal(dto.notes[0].text, 'line 1\nline 2');
+  assert.equal(dto.notes[0].signedAt, null);
+  assert.equal(dto.notes[0].clinic, null);
+  assert.deepEqual(toNotesDto([]), { patient: null, notes: [] });
 });

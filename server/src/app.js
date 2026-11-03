@@ -6,6 +6,7 @@ import { authRouter } from './routes/auth.js';
 import { bedsRouter } from './routes/beds.js';
 import { employeesRouter } from './routes/employees.js';
 import { metaRouter } from './routes/meta.js';
+import { patientsRouter } from './routes/patients.js';
 import { rosterRouter } from './routes/roster.js';
 import { settingsRouter } from './routes/settings.js';
 import { tasksRouter } from './routes/tasks.js';
@@ -22,6 +23,7 @@ export function createApp() {
   app.use('/api/roster', rosterRouter);
   app.use('/api/settings', settingsRouter);
   app.use('/api/beds', bedsRouter);
+  app.use('/api/patients', patientsRouter);
   app.use('/api/tasks', tasksRouter);
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));

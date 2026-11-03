@@ -16,6 +16,11 @@ export const config = {
     // Pseudo-beds that are not ward beds. ORHB is a holding area with long-stale admissions (ORHB-1, ORHB-5, …).
     excludeBeds: (process.env.BEDS_EXCLUDE ?? 'ORHB').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
   },
+  // Hospital system (HMIS): a patient's physician notes, by MR number. Fetched fresh on each request.
+  notesApi: {
+    url: process.env.NOTES_API_URL ?? 'http://182.188.28.220:3004/api/Surgery/patient-physician-notes',
+    timeoutMs: Number(process.env.NOTES_TIMEOUT_MS ?? 15000),
+  },
   db: {
     host: process.env.DB_HOST ?? '127.0.0.1',
     port: Number(process.env.DB_PORT ?? 3306),

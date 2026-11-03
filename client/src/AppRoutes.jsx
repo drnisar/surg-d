@@ -5,6 +5,7 @@ import { useSettings } from './settings.jsx';
 import ArchivePage from './pages/ArchivePage.jsx';
 import EmployeesPage from './pages/EmployeesPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import PatientNotesPage from './pages/PatientNotesPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import RosterPage from './pages/RosterPage.jsx';
 import SetupPage from './pages/SetupPage.jsx';
@@ -28,6 +29,7 @@ export function SignedInRoutes() {
     <Routes>
       <Route path="/" element={<TodayPage />} />
       <Route path="/ward" element={<WardPage />} />
+      <Route path="/patients/:mr" element={<PatientNotesPage />} />
       <Route path="/tasks" element={<TasksPage />} />
       {settings.archive.enabled && <Route path="/archive" element={<ArchivePage />} />}
       <Route path="/roster" element={<RosterPage />} />
