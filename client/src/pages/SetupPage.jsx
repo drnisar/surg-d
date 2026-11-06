@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SETTINGS_HEADING_MAX_LENGTH, taskWhatsappMessage } from '@surg-d/shared';
+import { SETTINGS_HEADING_MAX_LENGTH, SETTINGS_URL_MAX_LENGTH, taskWhatsappMessage } from '@surg-d/shared';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { useSettings } from '../settings.jsx';
@@ -137,6 +137,32 @@ export default function SetupPage() {
             aria-invalid={Boolean(errors['phone.defaultCountryCode'])}
           />
           {fieldError('phone.defaultCountryCode')}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>HMIS</CardTitle>
+          <CardDescription>
+            Shows "Open in HMIS" on a patient's page. Works only on the hospital network. Leave empty to hide the button.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-2">
+          <Label htmlFor="hmis-patient-url">Patient record link</Label>
+          <Input
+            id="hmis-patient-url"
+            inputMode="url"
+            value={form.hmis.patientUrl}
+            onChange={(e) => set('hmis', 'patientUrl')(e.target.value)}
+            maxLength={SETTINGS_URL_MAX_LENGTH}
+            placeholder="http://172.16.21.3:7008/hmis/f?p=138:21::::21:P21_MRNO:{mr}"
+            aria-invalid={Boolean(errors['hmis.patientUrl'])}
+          />
+          <p className="m-0 text-sm text-muted-foreground">
+            Put {'{mr}'} where the MR number goes. Without it, the button opens the page and you choose the patient
+            in HMIS.
+          </p>
+          {fieldError('hmis.patientUrl')}
         </CardContent>
       </Card>
 

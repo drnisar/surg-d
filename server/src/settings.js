@@ -1,4 +1,4 @@
-import { SETTINGS_DEFAULTS, SETTINGS_HEADING_MAX_LENGTH, normalizePhone, withDefaults } from '@surg-d/shared';
+import { SETTINGS_DEFAULTS, SETTINGS_HEADING_MAX_LENGTH, SETTINGS_URL_MAX_LENGTH, normalizePhone, withDefaults } from '@surg-d/shared';
 import { pool } from './db.js';
 
 // Validates a full settings object from the Setup page. Error keys are `section.field`.
@@ -29,6 +29,15 @@ export function validateSettings(input) {
   } catch (err) {
     errors['phone.defaultCountryCode'] = err.message;
   }
+
+  // HMIS is on the hospital network (http://172.16…), so plain http is allowed.
+  const hmisUrl = String(input?.hmis?.patientUrl ?? '').trim();
+  if (!hmisUrl) data.hmis.patientUrl = '';
+  else if (hmisUrl.length > SETTINGS_URL_MAX_LENGTH) {
+    errors['hmis.patientUrl'] = `Link must be at most ${SETTINGS_URL_MAX_LENGTH} characters`;
+  } else if (!/^https?:\/\/[^\s/]+\S*$/i.test(hmisUrl)) {
+    errors['hmis.patientUrl'] = 'Enter a link starting with http:// or https://';
+  } else data.hmis.patientUrl = hmisUrl;
 
   return Object.keys(errors).length ? { errors } : { data };
 }

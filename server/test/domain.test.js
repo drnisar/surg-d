@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addableDesignations, buildMrNumber, canEditEmployee, taskWhatsappMessage, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl, withDefaults, aiChatUrl, buildCaseSummaryPrompt, CASE_SUMMARY_KINDS, buildSoapPrompt, cleanSoapValues, redactIdentifiers } from '@surg-d/shared';
+import { addableDesignations, buildMrNumber, canEditEmployee, taskWhatsappMessage, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl, withDefaults, aiChatUrl, buildCaseSummaryPrompt, CASE_SUMMARY_KINDS, buildSoapPrompt, cleanSoapValues, redactIdentifiers, hmisPatientUrl, kthAppIntentUrl } from '@surg-d/shared';
 import { validateSettings } from '../src/settings.js';
 import { validateEmployee, validatePasswordChange } from '../src/employees.js';
 
@@ -227,4 +227,32 @@ test('case summary adds lab results when given, newest kept, abnormal values mar
   const capped = buildCaseSummaryPrompt({ notes: [], labs: many });
   assert.ok(capped.labsIncluded < 200 && capped.labsIncluded + capped.labsOmitted === 200);
   assert.ok(capped.prompt.includes('· T0:') && !capped.prompt.includes('· T199:'));
+});
+
+test('HMIS patient link puts the MR number in the admin\'s template', () => {
+  const t = 'http://172.16.21.3:7008/hmis/f?p=138:21::::21:P21_MRNO:{mr}';
+  assert.equal(hmisPatientUrl(t, 'K0360000001100'), 'http://172.16.21.3:7008/hmis/f?p=138:21::::21:P21_MRNO:K0360000001100');
+  assert.equal(hmisPatientUrl('http://x/{mr}?a={mr}', 'a b'), 'http://x/a%20b?a=a%20b');
+  assert.equal(hmisPatientUrl('http://x/f?p=138:21', 'K1'), 'http://x/f?p=138:21');
+  assert.equal(hmisPatientUrl('  ', 'K1'), null);
+  assert.equal(hmisPatientUrl(undefined, 'K1'), null);
+});
+
+test('validates the HMIS link setting', () => {
+  const base = withDefaults();
+  const withUrl = (patientUrl) => validateSettings({ ...base, hmis: { patientUrl } });
+  assert.equal(withUrl('').data.hmis.patientUrl, '');
+  assert.equal(withUrl(' http://172.16.21.3:7008/hmis/f?p=138:21::::21:P21_MRNO:{mr} ').data.hmis.patientUrl, 'http://172.16.21.3:7008/hmis/f?p=138:21::::21:P21_MRNO:{mr}');
+  assert.ok(withUrl('javascript:alert(1)').errors['hmis.patientUrl']);
+  assert.ok(withUrl('172.16.21.3/hmis').errors['hmis.patientUrl']);
+  assert.ok(withUrl(`http://x/${'a'.repeat(600)}`).errors['hmis.patientUrl']);
+  assert.equal(withDefaults({}).hmis.patientUrl, '');
+});
+
+test('KTH app intent link names the package and falls back to the web link', () => {
+  assert.equal(kthAppIntentUrl(null), 'intent://#Intent;package=pk.edu.kth.mobile_app_kth;end');
+  assert.equal(
+    kthAppIntentUrl('http://172.16.21.3:7008/hmis/f?p=138:21'),
+    'intent://#Intent;package=pk.edu.kth.mobile_app_kth;S.browser_fallback_url=http%3A%2F%2F172.16.21.3%3A7008%2Fhmis%2Ff%3Fp%3D138%3A21;end'
+  );
 });

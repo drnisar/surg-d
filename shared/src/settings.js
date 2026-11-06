@@ -7,7 +7,11 @@ export const SETTINGS_DEFAULTS = {
   phone: { defaultCountryCode: DEFAULT_COUNTRY_CODE },
   bedAllocation: { enabled: true },
   archive: { enabled: true },
+  // Link to a patient's record in HMIS, with {mr} for the MR number. Empty hides "Open in HMIS".
+  hmis: { patientUrl: '' },
 };
+
+export const SETTINGS_URL_MAX_LENGTH = 500;
 
 export const SETTINGS_HEADING_MAX_LENGTH = 40;
 

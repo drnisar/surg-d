@@ -9,3 +9,4 @@ export * from './soap.js';
 export * from './aiChat.js';
 export * from './caseSummary.js';
 export * from './labs.js';
+export * from './hmisLink.js';
