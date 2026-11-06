@@ -4,7 +4,8 @@ import { Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 
-// Some browsers cap long links, so a very long request opens an empty chat and relies on the clipboard.
+// Websites may refuse very long links, so unless a chat sets its own `maxUrl`, a very long request opens
+// an empty chat and relies on the clipboard.
 const MAX_URL = 8000;
 
 const copy = async (text) => {
@@ -33,9 +34,11 @@ export default function AiChatButtons({ getPrompt }) {
     setStatus('');
     const text = getPrompt();
     if (!text) return;
-    const app = !isPhoneOrTablet() && Boolean(AI_CHATS.find((c) => c.key === service).appUrl);
+    const chat = AI_CHATS.find((c) => c.key === service);
+    const app = !isPhoneOrTablet() && Boolean(chat.appUrl);
     const url = aiChatUrl(service, text, { app });
-    const short = url.length <= MAX_URL;
+    // Apps aren't bound by the websites' link limit, only by what they keep of the prompt.
+    const short = app && chat.appMaxPrompt ? text.length <= chat.appMaxPrompt : url.length <= (chat.maxUrl ?? MAX_URL);
     const copying = copy(text);
     const target = short ? url : aiChatUrl(service, '', { app });
     // An app link hands off to the app without leaving the page; a new tab would stay blank.
