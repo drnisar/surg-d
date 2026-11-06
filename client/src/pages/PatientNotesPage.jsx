@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText, Sparkles } from 'lucide-react';
 import { api } from '../api.js';
+import CaseSummaryDialog from '../components/CaseSummaryDialog.jsx';
+import SoapNoteDialog from '../components/SoapNoteDialog.jsx';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -27,6 +29,8 @@ export default function PatientNotesPage() {
   const bed = location.state?.bed;
   const [data, setData] = useState(null); // { patient, notes }
   const [error, setError] = useState('');
+  const [writing, setWriting] = useState(false);
+  const [summarising, setSummarising] = useState(false);
 
   const load = useCallback(async () => {
     setError('');
@@ -68,7 +72,17 @@ export default function PatientNotesPage() {
         <p className="m-0 text-sm text-muted-foreground">{details.join(' · ')}</p>
       </div>
 
-      <h3 className="m-0 text-base font-semibold">Physician notes from HMIS</h3>
+      <div className="flex flex-wrap items-center gap-3">
+        <h3 className="m-0 flex-1 text-base font-semibold">Physician notes from HMIS</h3>
+        <Button size="sm" variant="outline" disabled={!data?.notes.length} onClick={() => setSummarising(true)}>
+          <FileText />
+          Case summary
+        </Button>
+        <Button size="sm" onClick={() => setWriting(true)}>
+          <Sparkles />
+          Write SOAP note
+        </Button>
+      </div>
 
       {error && (
         <div className="flex flex-wrap items-center gap-3">
@@ -105,6 +119,18 @@ export default function PatientNotesPage() {
           <CardContent className="text-sm break-words whitespace-pre-wrap">{note.text || '—'}</CardContent>
         </Card>
       ))}
+
+      {summarising && (
+        <CaseSummaryDialog
+          mrNumber={mr}
+          name={patient?.name ?? bed?.patientName}
+          patient={patient}
+          bed={bed}
+          notes={data.notes}
+          onClose={() => setSummarising(false)}
+        />
+      )}
+      {writing && <SoapNoteDialog patient={patient} bed={bed} onClose={() => setWriting(false)} />}
     </div>
   );
 }

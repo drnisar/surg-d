@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addableDesignations, buildMrNumber, canEditEmployee, taskWhatsappMessage, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl, withDefaults } from '@surg-d/shared';
+import { addableDesignations, buildMrNumber, canEditEmployee, taskWhatsappMessage, employeeCodeOf, isValidEmployeeMr, normalizePhone, parseMrNumber, roleForDesignation, whatsappUrl, withDefaults, aiChatUrl, buildCaseSummaryPrompt, CASE_SUMMARY_KINDS, buildSoapPrompt, cleanSoapValues, redactIdentifiers } from '@surg-d/shared';
 import { validateSettings } from '../src/settings.js';
 import { validateEmployee, validatePasswordChange } from '../src/employees.js';
 
@@ -145,4 +145,67 @@ test('validates settings', () => {
 
 test('WhatsApp message uses a custom heading', () => {
   assert.equal(taskWhatsappMessage({ bedCode: 'B1', descriptions: ['X'], heading: 'Surg D' }), 'Surg D — new task for bed B1: X');
+});
+
+test('cleans SOAP note values', () => {
+  const { data, error } = cleanSoapValues({ age: ' 45 Year(s) ', bp: '120/80', pulse: '', plan: 'Continue antibiotics', name: 'Ignored' });
+  assert.deepEqual(data, { age: '45 Year(s)', bp: '120/80', plan: 'Continue antibiotics' });
+  assert.equal(error, null);
+  assert.ok(cleanSoapValues({ age: '45', sex: 'Male' }).error);
+  assert.equal(cleanSoapValues({ bp: 'x'.repeat(30) }).data.bp.length, 20);
+});
+
+test('SOAP prompt holds only the given values and no identifiers', () => {
+  const { data } = cleanSoapValues({ sex: 'Female', complaints: 'Mild pain', bp: '110/70', plan: 'Mobilise', name: 'X', mrNumber: 'K03' });
+  const prompt = buildSoapPrompt(data);
+  assert.ok(prompt.endsWith('Values:\nPatient:\n- Sex: Female\nSubjective:\n- Complaints: Mild pain\nObjective:\n- BP: 110/70\nPlan:\n- Plan: Mobilise'));
+  assert.ok(!/K03/.test(prompt));
+});
+
+test('AI chat links carry the prompt', () => {
+  assert.equal(aiChatUrl('chatgpt', 'a b'), 'https://chatgpt.com/?q=a%20b');
+  assert.equal(aiChatUrl('claude', 'S: 1/2'), 'https://claude.ai/new?q=S%3A%201%2F2');
+  assert.equal(aiChatUrl('claude', ''), 'https://claude.ai/new');
+  assert.equal(aiChatUrl('copilot', 'a'), 'https://copilot.microsoft.com/?q=a');
+  assert.equal(aiChatUrl('claude', 'a b', { app: true }), 'claude://claude.ai/new?q=a%20b');
+  assert.equal(aiChatUrl('chatgpt', 'a', { app: true }), 'https://chatgpt.com/?q=a');
+});
+
+test('replaces the patient name and MR number in note text', () => {
+  const ids = { name: 'Ali  Khan', mrNumber: 'K0360000001100' };
+  assert.equal(redactIdentifiers('ALI KHAN (k0360000001100) seen. Ali Khan stable.', ids), 'the patient ([MR]) seen. the patient stable.');
+  assert.equal(redactIdentifiers('a+b (x)', { name: 'a+b' }), 'the patient (x)');
+});
+
+test('case summary prompt lists notes oldest first without authors or identifiers', () => {
+  const notes = [
+    { writtenAt: '2026-11-02T09:05', specialty: 'Surgery', author: 'Dr Z', text: 'Ali Khan improving' },
+    { writtenAt: '2026-11-01T08:00', clinic: 'ER', author: 'Dr Y', text: 'Admitted, MR K0360000001100' },
+    { writtenAt: '2026-10-31T08:00', text: '  ' },
+  ];
+  const { prompt, included, omitted } = buildCaseSummaryPrompt({ age: '45', sex: 'Male', notes, name: 'Ali Khan', mrNumber: 'K0360000001100' });
+  assert.equal(included, 2);
+  assert.equal(omitted, 0);
+  assert.ok(prompt.indexOf('2026-11-01 08:00 · ER') < prompt.indexOf('2026-11-02 09:05 · Surgery'));
+  assert.ok(!/Ali|K036|Dr [YZ]/.test(prompt));
+  assert.ok(buildCaseSummaryPrompt({ notes: [] }).error);
+  assert.ok(buildCaseSummaryPrompt({ notes: [], extra: 'Fever today' }).prompt.endsWith('Added by the doctor today:\nFever today'));
+});
+
+test('case summary keeps the newest notes when they are too long', () => {
+  const notes = ['new', 'mid', 'old'].map((t) => ({ writtenAt: '2026-11-01T08:00', text: t.repeat(4000) }));
+  const { included, omitted, prompt } = buildCaseSummaryPrompt({ notes });
+  assert.equal(included, 1);
+  assert.equal(omitted, 2);
+  assert.ok(prompt.includes('newnew') && !prompt.includes('oldold'));
+});
+
+test('case summary uses the chosen kind, handover by default', () => {
+  const notes = [{ writtenAt: '2026-11-01T08:00', text: 'Post-op day 1' }];
+  for (const { key, task } of CASE_SUMMARY_KINDS) {
+    assert.ok(buildCaseSummaryPrompt({ kind: key, notes }).prompt.startsWith(task));
+  }
+  assert.ok(buildCaseSummaryPrompt({ notes }).prompt.startsWith(CASE_SUMMARY_KINDS[0].task));
+  assert.equal(CASE_SUMMARY_KINDS[0].key, 'handover');
+  assert.ok(buildCaseSummaryPrompt({ kind: 'nope', notes }).error);
 });

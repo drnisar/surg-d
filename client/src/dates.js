@@ -47,3 +47,13 @@ export function formatDateTime(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
+
+// Day of the hospital stay; the admission day is day 1. `admittedAt` is the hospital's local ISO time.
+export function hospitalDay(admittedAt) {
+  const start = admittedAt && new Date(admittedAt);
+  if (!start || Number.isNaN(start.getTime())) return '';
+  start.setHours(0, 0, 0, 0);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return String(Math.round((now - start) / 86_400_000) + 1);
+}
