@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, FileText, Sparkles } from 'lucide-react';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { FileText, FlaskConical, Sparkles } from 'lucide-react';
 import { api } from '../api.js';
 import CaseSummaryDialog from '../components/CaseSummaryDialog.jsx';
+import PatientHeader from '../components/PatientHeader.jsx';
 import SoapNoteDialog from '../components/SoapNoteDialog.jsx';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,14 +21,12 @@ const formatNoteTime = (value) =>
       })
     : 'Date not recorded';
 
-// A patient's physician notes from HMIS, opened from the Ward. The Ward passes the bed in `state`
-// so the header shows at once; the notes come from the server, which fetches them fresh each time.
+// A patient's physician notes from HMIS, opened from the Ward; lab results are on their own page. The Ward
+// passes the bed in `state` so the header shows at once; the record comes from the server, fetched fresh.
 export default function PatientNotesPage() {
   const { mr } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const bed = location.state?.bed;
-  const [data, setData] = useState(null); // { patient, notes }
+  const bed = useLocation().state?.bed;
+  const [data, setData] = useState(null); // { patient, notes, … }
   const [error, setError] = useState('');
   const [writing, setWriting] = useState(false);
   const [summarising, setSummarising] = useState(false);
@@ -36,7 +35,7 @@ export default function PatientNotesPage() {
     setError('');
     setData(null);
     try {
-      setData(await api(`/patients/${encodeURIComponent(mr)}/notes`));
+      setData(await api(`/patients/${encodeURIComponent(mr)}/history`));
     } catch (err) {
       setError(err.message);
     }
@@ -46,34 +45,20 @@ export default function PatientNotesPage() {
     load();
   }, [load]);
 
-  // Opened from a link outside the app there's no page to go back to.
-  const back = () => (location.key !== 'default' ? navigate(-1) : navigate('/ward'));
-
   const patient = data?.patient;
-  const name = patient?.name ?? bed?.patientName ?? 'Patient';
-  const details = [
-    mr,
-    [patient?.age, patient?.sex].filter(Boolean).join(', '),
-    bed?.code && `Bed ${bed.code}`,
-    bed?.consultantName,
-  ].filter(Boolean);
 
   return (
     <div className="mx-auto grid max-w-3xl gap-4">
-      <div>
-        <Button variant="ghost" size="sm" className="-ml-2" onClick={back}>
-          <ArrowLeft />
-          Back
-        </Button>
-      </div>
-
-      <div>
-        <h2 className="m-0 text-2xl font-semibold">{name}</h2>
-        <p className="m-0 text-sm text-muted-foreground">{details.join(' · ')}</p>
-      </div>
+      <PatientHeader mr={mr} patient={patient} bed={bed} fallback="/ward" />
 
       <div className="flex flex-wrap items-center gap-3">
         <h3 className="m-0 flex-1 text-base font-semibold">Physician notes from HMIS</h3>
+        <Button size="sm" variant="outline" asChild>
+          <Link to={`/patients/${encodeURIComponent(mr)}/labs`} state={{ bed }}>
+            <FlaskConical />
+            Lab results
+          </Link>
+        </Button>
         <Button size="sm" variant="outline" disabled={!data?.notes.length} onClick={() => setSummarising(true)}>
           <FileText />
           Case summary

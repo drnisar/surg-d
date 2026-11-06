@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normaliseBeds } from '../src/hospitalBeds.js';
-import { parseHmisDate, toNotesDto } from '../src/hospitalNotes.js';
+import { parseHmisDate, toHistoryDto } from '../src/hospitalHistory.js';
 import { createdRangeSql, parseCreatedRange, validateTask } from '../src/tasks.js';
 
 test('parseCreatedRange reads epoch-ms bounds and builds SQL', () => {
@@ -96,21 +96,62 @@ test('parseHmisDate reads month-first HMIS dates as local wall-clock time', () =
   assert.equal(parseHmisDate('10/28/2026 3:40:12 PM'), '2026-10-28T15:40');
   assert.equal(parseHmisDate('1/5/2026 12:15:00 AM'), '2026-01-05T00:15');
   assert.equal(parseHmisDate('1/5/2026 12:15:00 PM'), '2026-01-05T12:15');
+  assert.equal(parseHmisDate('2026-11-05T19:39:00'), '2026-11-05T19:39');
   assert.equal(parseHmisDate(''), null);
   assert.equal(parseHmisDate('soon'), null);
 });
 
-test('toNotesDto maps HMIS notes, newest first', () => {
-  const row = (date, notes) => ({
-    patienT_MRNO: 'K0300006069690 ', patienT_NAME: 'Test Patient', age: '40 Year(s)', seX_DESC: 'Male',
-    noteS_DATE: date, signeD_DATE: '', writeR_USER_NAME: 'Dr A', cliniC_DESC: '', cliniC_SPECIALTY_DESC: '',
-    patienT_LOCATION_DESC: 'SUR-D', notes,
+test('toHistoryDto maps HMIS notes, newest first', () => {
+  const row = (date, notes, plans = '') => ({
+    patientMrno: 'K0300006069690 ', patientName: 'Test Patient', age: '40 Year(s)', sexDesc: 'Male',
+    notesDate: date, signedDate: null, writerUserName: 'Dr A', clinicDesc: '', clinicSpecialtyDesc: '',
+    patientLocationDesc: 'SUR-D', notes, plans, tests: '', remarks: '', consultantReview: '',
   });
-  const dto = toNotesDto([row('10/28/2026 3:40:00 PM', 'old'), row('11/2/2026 9:05:00 AM', 'line 1\r\nline 2')]);
+  const dto = toHistoryDto({
+    physicianNotes: [row('2026-10-28T15:40:12', 'old'), row('2026-11-02T09:05:00', 'line 1\r\nline 2', 'NPO')],
+    investigations: [],
+  });
   assert.deepEqual(dto.patient, { mrNumber: 'K0300006069690', name: 'Test Patient', age: '40 Year(s)', sex: 'Male' });
   assert.deepEqual(dto.notes.map((n) => n.writtenAt), ['2026-11-02T09:05', '2026-10-28T15:40']);
-  assert.equal(dto.notes[0].text, 'line 1\nline 2');
+  assert.equal(dto.notes[0].text, 'line 1\nline 2\n\nPlan: NPO');
   assert.equal(dto.notes[0].signedAt, null);
   assert.equal(dto.notes[0].clinic, null);
-  assert.deepEqual(toNotesDto([]), { patient: null, notes: [] });
+  assert.deepEqual(toHistoryDto({}), { patient: null, notes: [], labs: [], otherInvestigations: [] });
+});
+
+test('toHistoryDto de-duplicates lab results across orders and groups them by report date', () => {
+  const result = (id, name, value, date, normal = 'Y', range = '1 - 2') => ({
+    parameterId: id, parameterName: name, resultValue: '', resultText: '', resultNumeric: value, symbol: '',
+    normal, rangeText: range, reportDate: date,
+  });
+  // HMIS repeats every CBC result on each CBC order, and each value with two range texts.
+  const cbcResults = [
+    result('P1', 'HGB', 13.4, '2022-03-16T09:51:48'),
+    result('P1', 'HGB', 13.4, '2022-03-16T09:51:48', 'Y', 'other range'),
+    result('P2', 'PLT', 146, '2022-03-16T09:51:48', 'N'),
+    result('P1', 'HGB', 0, '2021-08-31T10:00:00'),
+    { ...result('P9', 'Hepatitis B Profile', null, '2021-08-31T10:00:00') },
+  ];
+  const order = (name, trnDate, results, extra = {}) => ({
+    investigationName: name, departmentName: 'Pathology-KTH', trnDate, reportDate: null, reportAvailable: 'Y', results, ...extra,
+  });
+  const dto = toHistoryDto({
+    physicianNotes: [],
+    investigations: [
+      order('CBC', '2022-03-16T08:12:47', cbcResults),
+      order('CBC', '2021-08-31T08:00:00', cbcResults),
+      order('XRAY CHEST', '2026-11-05T15:48:58', [], { departmentName: 'Radiology-KTH' }),
+      order('XRAY CHEST', '2026-11-05T15:48:58', [], { departmentName: 'Radiology-KTH' }),
+      order('ECG', '2026-11-05T15:12:15', [], { reportAvailable: 'N' }),
+      order('PRIVATE ROOM:28', '2026-11-05T16:46:51', [], { departmentName: 'INPATIENT SERVICES-KTH' }),
+      order('MRI', null, []),
+    ],
+  });
+  assert.deepEqual(dto.labs.map((p) => [p.name, p.reportedAt, p.results.length]), [
+    ['CBC', '2022-03-16T09:51', 2],
+    ['CBC', '2021-08-31T10:00', 1],
+  ]);
+  assert.deepEqual(dto.labs[0].results[1], { name: 'PLT', value: '146', range: '1 - 2', abnormal: true });
+  assert.equal(dto.labs[1].results[0].value, '0');
+  assert.deepEqual(dto.otherInvestigations.map((i) => [i.name, i.reportAvailable]), [['XRAY CHEST', true], ['ECG', false]]);
 });
