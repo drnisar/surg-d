@@ -210,3 +210,21 @@ test('case summary uses the chosen kind, handover by default', () => {
   assert.equal(CASE_SUMMARY_KINDS[0].key, 'handover');
   assert.ok(buildCaseSummaryPrompt({ kind: 'nope', notes }).error);
 });
+
+test('case summary adds lab results when given, newest kept, abnormal values marked', () => {
+  const labs = [
+    { name: 'CBC', reportedAt: '2026-11-04T09:00', results: [{ name: 'HGB', value: '9.8', abnormal: true, range: '11.5 -\n17.5' }, { name: 'WBC', value: '7.6', abnormal: false, range: '4 - 11' }] },
+    { name: 'RFT', reportedAt: '2026-11-01T08:00', results: [{ name: 'Creatinine *', value: '1.0', abnormal: false }] },
+    { name: 'Pending', reportedAt: '2026-11-05T08:00', results: [] },
+  ];
+  const { prompt, labsIncluded, labsOmitted } = buildCaseSummaryPrompt({ notes: [], labs });
+  assert.equal(labsIncluded, 2);
+  assert.equal(labsOmitted, 0);
+  assert.ok(prompt.includes('Lab results:\n2026-11-01 08:00 · RFT: Creatinine 1.0\n2026-11-04 09:00 · CBC: HGB 9.8* (11.5 - 17.5), WBC 7.6'));
+  assert.ok(prompt.includes('A * marks a value outside the reference range'));
+  assert.ok(!buildCaseSummaryPrompt({ notes: [{ text: 'x' }] }).prompt.includes('Lab results'));
+  const many = Array.from({ length: 200 }, (_, i) => ({ name: `T${i}`, reportedAt: `2026-11-01T08:${String(i % 60).padStart(2, '0')}`, results: [{ name: 'X', value: '1'.repeat(40) }] }));
+  const capped = buildCaseSummaryPrompt({ notes: [], labs: many });
+  assert.ok(capped.labsIncluded < 200 && capped.labsIncluded + capped.labsOmitted === 200);
+  assert.ok(capped.prompt.includes('· T0:') && !capped.prompt.includes('· T199:'));
+});

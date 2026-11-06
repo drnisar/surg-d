@@ -40,10 +40,10 @@ function toNote(row) {
 }
 
 // HMIS attaches every result of a test to each order of it (all CBCs carry all CBC results), and sends
-// each value twice with different range texts. So results are de-duplicated across orders and grouped
-// by test and report date. `normal: 'N'` marks a value outside the range.
+// each value twice with different range texts. So results are de-duplicated across orders, keeping the
+// shorter range, and grouped by test and report date. `normal: 'N'` marks a value outside the range.
 function toLabs(investigations) {
-  const seen = new Set();
+  const seen = new Map(); // result key -> result already added
   const panels = new Map();
   for (const inv of investigations) {
     for (const r of inv.results ?? []) {
@@ -53,19 +53,21 @@ function toLabs(investigations) {
       if (!value) continue; // section headings such as 'Hepatitis B Profile'
       const reportedAt = parseHmisDate(r.reportDate);
       const key = [r.parameterId, reportedAt, value].join('|');
-      if (seen.has(key)) continue;
-      seen.add(key);
+      const range = tidy(r.rangeText);
+      const earlier = seen.get(key);
+      if (earlier) {
+        // Of the two range texts, keep the plain range ('4.8 - 6.0') over the interpretation guide.
+        if (range && (!earlier.range || range.length < earlier.range.length)) earlier.range = range;
+        continue;
+      }
       const name = tidy(inv.investigationName);
       const panelKey = `${name}|${reportedAt}`;
       if (!panels.has(panelKey)) {
         panels.set(panelKey, { name, department: tidy(inv.departmentName), reportedAt, results: [] });
       }
-      panels.get(panelKey).results.push({
-        name: tidy(r.parameterName),
-        value,
-        range: tidy(r.rangeText),
-        abnormal: r.normal === 'N',
-      });
+      const result = { name: tidy(r.parameterName), value, range, abnormal: r.normal === 'N' };
+      seen.set(key, result);
+      panels.get(panelKey).results.push(result);
     }
   }
   return [...panels.values()].sort(newestFirst('reportedAt'));

@@ -152,6 +152,7 @@ test('toHistoryDto de-duplicates lab results across orders and groups them by re
     ['CBC', '2021-08-31T10:00', 1],
   ]);
   assert.deepEqual(dto.labs[0].results[1], { name: 'PLT', value: '146', range: '1 - 2', abnormal: true });
+  assert.equal(dto.labs[0].results[0].range, '1 - 2'); // shorter of '1 - 2' and 'other range'
   assert.equal(dto.labs[1].results[0].value, '0');
   assert.deepEqual(dto.otherInvestigations.map((i) => [i.name, i.reportAvailable]), [['XRAY CHEST', true], ['ECG', false]]);
 });

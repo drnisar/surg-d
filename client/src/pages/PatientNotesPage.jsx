@@ -59,7 +59,12 @@ export default function PatientNotesPage() {
             Lab results
           </Link>
         </Button>
-        <Button size="sm" variant="outline" disabled={!data?.notes.length} onClick={() => setSummarising(true)}>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!data?.notes.length && !data?.labs.length}
+          onClick={() => setSummarising(true)}
+        >
           <FileText />
           Case summary
         </Button>
@@ -112,6 +117,7 @@ export default function PatientNotesPage() {
           patient={patient}
           bed={bed}
           notes={data.notes}
+          labs={data.labs}
           onClose={() => setSummarising(false)}
         />
       )}
