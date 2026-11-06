@@ -13,10 +13,15 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Tasks follow the patient; older tasks saved before patients were linked fall back to the bed code.
 const taskKey = (t) => t.patientMr ?? `bed:${t.bedCode}`;
 const bedKey = (b) => b.mrNumber ?? `bed:${b.code}`;
+
+// The consultant filter is kept per device: a doctor usually works for one consultant's team.
+const CONSULTANT_KEY = 'surgd.wardConsultant';
+const ALL = 'all';
 
 export default function WardPage() {
   const { user } = useAuth();
@@ -39,6 +44,7 @@ export default function WardPage() {
   const [allocBusy, setAllocBusy] = useState(false);
   const [allocError, setAllocError] = useState('');
   const [query, setQuery] = useState('');
+  const [consultant, setConsultant] = useState(() => localStorage.getItem(CONSULTANT_KEY) ?? ALL);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState('');
 
@@ -97,11 +103,26 @@ export default function WardPage() {
 
   const list = beds?.beds ?? [];
   const myCount = list.filter(isMine).length;
+  const consultants = useMemo(() => {
+    const counts = new Map();
+    for (const b of beds?.beds ?? []) {
+      if (b.consultantName) counts.set(b.consultantName, (counts.get(b.consultantName) ?? 0) + 1);
+    }
+    return [...counts].sort(([a], [b]) => a.localeCompare(b));
+  }, [beds]);
+  // A saved consultant with no patients today shows everyone, but stays saved for when they're back.
+  const consultantShown = consultants.some(([name]) => name === consultant) ? consultant : ALL;
+  const chooseConsultant = (value) => {
+    setConsultant(value);
+    if (value === ALL) localStorage.removeItem(CONSULTANT_KEY);
+    else localStorage.setItem(CONSULTANT_KEY, value);
+  };
   const q = query.trim().toLowerCase();
   const shown = list.filter(
     (b) =>
       (!onlyWithTasks || tasksByKey.has(bedKey(b))) &&
       (!onlyMine || !hasBeds || isMine(b)) &&
+      (consultantShown === ALL || b.consultantName === consultantShown) &&
       (!q || [b.code, b.patientName, b.mrNumber, b.consultantName].some((v) => v?.toLowerCase().includes(q)))
   );
 
@@ -175,6 +196,21 @@ export default function WardPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        {consultants.length > 1 && (
+          <Select value={consultantShown} onValueChange={chooseConsultant}>
+            <SelectTrigger className="w-full sm:w-56" aria-label="Consultant">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All consultants ({list.length})</SelectItem>
+              {consultants.map(([name, count]) => (
+                <SelectItem key={name} value={name}>
+                  {name} ({count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         {checkFilter('only-with-tasks', 'Only beds with open tasks', onlyWithTasks, setOnlyWithTasks)}
         {hasBeds && checkFilter('only-mine', 'My beds', onlyMine, setOnlyMine)}
         {canAllocate && (
