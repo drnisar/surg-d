@@ -168,6 +168,7 @@ test('AI chat links carry the prompt', () => {
   assert.equal(aiChatUrl('claude', ''), 'https://claude.ai/new');
   assert.equal(aiChatUrl('copilot', 'a'), 'https://copilot.microsoft.com/?q=a');
   assert.equal(aiChatUrl('claude', 'a b', { app: true }), 'claude://claude.ai/new?q=a%20b');
+  assert.equal(aiChatUrl('copilot', 'a', { app: true }), 'ms-copilot:chat?q=a');
   assert.equal(aiChatUrl('chatgpt', 'a', { app: true }), 'https://chatgpt.com/?q=a');
 });
 
