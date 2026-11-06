@@ -11,8 +11,10 @@ const isAndroid = () => /Android/i.test(navigator.userAgent);
 
 // Opened without noopener: a browser only finds a named tab again while this site is its opener.
 // HMIS is the hospital's own system on its private network, so keeping that link is acceptable.
-// The MR number is copied too, since a page can't type into another site's field; the copy starts
-// before the tab switch so it still counts as part of the click.
+// An HMIS tab that's already open is only brought to the front, not reloaded: the link carries no APEX
+// session, so reloading would land on the login page and lose the sign-in made in that tab. So a {mr}
+// link only applies on the first open; after that the doctor pastes the copied MR number.
+// The copy starts before the tab switch so it still counts as part of the click.
 // On Android it opens the "Medical Information KTH" app instead (falling back to the web link).
 const openHmis = (e, url, mr) => {
   e.preventDefault();
@@ -21,9 +23,17 @@ const openHmis = (e, url, mr) => {
     window.location.href = kthAppIntentUrl(url);
     return copied;
   }
-  const tab = window.open(url, HMIS_TAB);
-  if (tab) tab.focus();
-  else window.location.href = url; // popup blocked: open it here instead
+  const tab = window.open('', HMIS_TAB); // finds the tab without navigating it, or opens a blank one
+  if (!tab) {
+    window.location.href = url; // popup blocked: open it here instead
+    return copied;
+  }
+  try {
+    if (tab.location.href === 'about:blank') tab.location.href = url;
+  } catch {
+    // Reading another site's address throws: HMIS is already loaded there, so leave it as it is.
+  }
+  tab.focus();
   return copied;
 };
 
